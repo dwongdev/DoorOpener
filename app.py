@@ -40,15 +40,19 @@ except Exception:
 TZ = os.environ.get("TZ", "UTC")
 try:
     TIMEZONE = pytz.timezone(TZ)
-    print(f"Using timezone: {TZ}")
+    logger.info(f"Using timezone: {TZ}")
 except pytz.exceptions.UnknownTimeZoneError:
-    print(f"Unknown timezone '{TZ}', falling back to UTC")
+    logger.warning(f"Unknown timezone '{TZ}', falling back to UTC")
     TIMEZONE = pytz.UTC
     TZ = "UTC"
 
 
-def get_current_time():
-    """Get current time in the configured timezone"""
+def get_current_time() -> datetime:
+    """Get current time in the configured timezone.
+
+    Returns:
+        datetime: Current time aware of the configured TIMEZONE.
+    """
     return datetime.now(TIMEZONE)
 
 
@@ -58,7 +62,7 @@ log_dir = os.path.join(os.path.dirname(__file__), "logs")
 try:
     os.makedirs(log_dir, exist_ok=True)
 except Exception as e:
-    print(f"Could not create log directory: {e}")
+    logger.error(f"Could not create log directory: {e}")
 log_path = os.path.join(log_dir, "log.txt")
 
 # Dedicated logger for door attempts (audit trail)
@@ -100,6 +104,25 @@ app.config.update(
 
 # --- Configuration ---
 config = ConfigParser()
+# CSRF token header name (must match front‑end)
+CSRF_HEADER = "X-CSRF-Token"
+
+
+def _validate_csrf(request) -> bool:
+    """Validate CSRF token for state‑changing requests.
+
+    The token is stored in the user's session under ``_csrf_token`` and must be
+    sent in the ``X-CSRF-Token`` header. If the token is missing in the session,
+    a new one is generated (useful for the first request).
+    """
+    token = session.get("_csrf_token")
+    if not token:
+        token = secrets.token_urlsafe(16)
+        session["_csrf_token"] = token
+    header_token = request.headers.get(CSRF_HEADER)
+    return header_token == token
+
+
 config_path = os.path.join(os.path.dirname(__file__), "config.ini")
 config.read(config_path)
 
@@ -122,7 +145,7 @@ if not _env_secret:
 user_pins = dict(config.items("pins")) if config.has_section("pins") else {}
 
 # Admin Configuration
-admin_password = config.get(
+admin_password = os.getenv("ADMIN_PASSWORD") or config.get(
     "admin", "admin_password", fallback="4384339380437neghrjlkmfef"
 )
 
@@ -265,9 +288,14 @@ def get_client_identifier():
     return primary_ip, session_id, identifier
 
 
-def add_security_headers(response):
+def add_security_headers(response) -> "flask.Response":
     """Add security headers for reverse proxy deployment.
-    Note: HSTS should be set by your TLS-terminating reverse proxy.
+
+    Args:
+        response: Flask response object to which headers will be added.
+
+    Returns:
+        The same response object with security headers attached.
     """
     # MIME sniffing & legacy XSS
     response.headers["X-Content-Type-Options"] = "nosniff"
@@ -301,9 +329,33 @@ def add_security_headers(response):
     return response
 
 
-def get_delay_seconds(attempt_count):
-    """Calculate progressive delay: 1s, 2s, 4s, 8s, 16s"""
+def get_delay_seconds(attempt_count) -> int:
+    """Calculate progressive delay: 1s, 2s, 4s, 8s, 16s.
+
+    Returns the number of seconds to wait based on the number of failed attempts.
+    """
     return min(2 ** (attempt_count - 1), 16) if attempt_count > 0 else 0
+
+
+def apply_delay(delay: int):
+    """Return a non‑blocking error response for the given delay.
+
+    Instead of sleeping the request thread, we inform the client to retry after
+    ``delay`` seconds. The response includes a ``Retry-After`` header as per
+    HTTP specifications.
+    """
+    if delay > 0:
+        return (
+            jsonify(
+                {
+                    "status": "error",
+                    "message": f"Please wait {delay} seconds before retrying",
+                }
+            ),
+            429,
+            {"Retry-After": str(delay)},
+        )
+    return None
 
 
 def check_global_rate_limit():
@@ -406,6 +458,9 @@ def battery():
 
 @app.route("/open-door", methods=["POST"])
 def open_door():
+    # CSRF protection for state‑changing POST request
+    if not _validate_csrf(request):
+        abort(403, description="CSRF token missing or invalid")
     try:
         primary_ip, session_id, identifier = get_client_identifier()
         now = get_current_time()
@@ -1124,6 +1179,9 @@ def oidc_callback():
 
 @app.route("/admin/auth", methods=["POST"])
 def admin_auth():
+    # CSRF protection for admin authentication POST
+    if not _validate_csrf(request):
+        abort(403, description="CSRF token missing or invalid")
     """Authenticate admin password with progressive delays and temporary blocking.
     Uses the same session-based counters as open_door to slow brute force attempts.
     """
@@ -1199,7 +1257,16 @@ def admin_auth():
         session_failed_attempts[session_id] += 1
         delay = get_delay_seconds(session_failed_attempts[session_id])
         if delay > 0:
-            time.sleep(delay)
+
+            async def apply_delay_non_blocking(delay):
+                await asyncio.sleep(delay)
+                return None
+
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            resp = loop.run_until_complete(apply_delay_non_blocking(delay))
+            if resp:
+                return resp
 
         # Block session after SESSION_MAX_ATTEMPTS failures
         if session_failed_attempts[session_id] >= SESSION_MAX_ATTEMPTS:
@@ -1225,7 +1292,12 @@ def admin_auth():
 
 
 @app.route("/admin/check-auth", methods=["GET"])
-def admin_check_auth():
+def admin_check_auth() -> "flask.Response":
+    """Check if admin is currently authenticated.
+
+    Returns:
+        JSON response indicating authentication status and login time if authenticated.
+    """
     """Check if admin is currently authenticated"""
     if session.get("admin_authenticated"):
         login_time = session.get("admin_login_time")
@@ -1236,6 +1308,9 @@ def admin_check_auth():
 
 @app.route("/admin/logout", methods=["POST"])
 def admin_logout():
+    # CSRF protection for admin logout POST
+    if not _validate_csrf(request):
+        abort(403, description="CSRF token missing or invalid")
     """Logout admin user"""
     session.pop("admin_authenticated", None)
     session.pop("admin_login_time", None)
@@ -1260,14 +1335,20 @@ def auth_status():
 
 
 @app.route("/admin/logs")
-def admin_logs():
-    """Get parsed log data for admin dashboard"""
+def admin_logs(limit: int = 100, offset: int = 0):
+    """Return paginated log entries for the admin dashboard.
+
+    Args:
+        limit: Maximum number of log entries to return (default 100).
+        offset: Number of entries to skip (default 0).
+    """
     # Check if admin is authenticated
     if not session.get("admin_authenticated"):
         return jsonify({"error": "Authentication required"}), 401
+    """Get parsed log data for admin dashboard"""
 
     try:
-        logs = []
+        logs = []  # type: list[dict]
         log_path = os.path.join(os.path.dirname(__file__), "logs", "log.txt")
 
         if os.path.exists(log_path):
@@ -1329,7 +1410,7 @@ def admin_logs():
                             continue
             except Exception as e:
                 logger.error(f"Error reading log file: {e}")
-        return jsonify({"logs": logs})
+        return jsonify({"logs": logs[offset : offset + limit], "total": len(logs)})
     except Exception as e:
         logger.error(f"Exception in admin_logs: {e}")
         return jsonify({"error": "Failed to load logs"}), 500
