@@ -105,9 +105,11 @@ def test_admin_auth_blocking(client, app_module, monkeypatch):
     h = _std_headers()
 
     # 3 failures (SESSION_MAX_ATTEMPTS default is 3)
+    # The app may return 429 (Retry-After) for progressive delays prior to blocking,
+    # and 403 when the threshold is reached.
     for _ in range(app_module.SESSION_MAX_ATTEMPTS):
         r = client.post("/admin/auth", data=json.dumps(wrong), headers=h)
-        assert r.status_code == 403
+        assert r.status_code in (403, 429)
     # Next attempt is blocked
     r = client.post("/admin/auth", data=json.dumps(wrong), headers=h)
     assert r.status_code == 429
