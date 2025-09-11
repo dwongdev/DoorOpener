@@ -12,7 +12,6 @@ import logging
 from logging.handlers import RotatingFileHandler
 import requests
 import secrets
-import asyncio
 from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 from flask import (
@@ -26,6 +25,7 @@ from flask import (
     url_for,
     send_from_directory,
     g,
+    Response,
 )
 from werkzeug.middleware.proxy_fix import ProxyFix
 from configparser import ConfigParser
@@ -67,7 +67,7 @@ log_dir = os.path.join(os.path.dirname(__file__), "logs")
 try:
     os.makedirs(log_dir, exist_ok=True)
 except Exception as e:
-    logger.error(f"Could not create log directory: {e}")
+    logging.getLogger("dooropener").error(f"Could not create log directory: {e}")
 log_path = os.path.join(log_dir, "log.txt")
 
 # Dedicated logger for door attempts (audit trail)
@@ -307,7 +307,7 @@ def get_client_identifier():
     return primary_ip, session_id, identifier
 
 
-def add_security_headers(response) -> "flask.Response":
+def add_security_headers(response) -> Response:
     """Add security headers for reverse proxy deployment.
 
     Args:
@@ -1320,7 +1320,7 @@ def admin_auth():
 
 
 @app.route("/admin/check-auth", methods=["GET"])
-def admin_check_auth() -> "flask.Response":
+def admin_check_auth() -> Response:
     """Check if admin is currently authenticated.
 
     Returns:
