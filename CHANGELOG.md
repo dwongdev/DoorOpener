@@ -1,3 +1,16 @@
+## v[1.10.1] - 2025-12-09
+
+### 🎨 UI/UX
+- Added a fully responsive mobile view for the Users admin tab.
+  - Users are rendered as touch-friendly cards on small screens with status badges and action buttons.
+  - The desktop table remains unchanged; mobile now switches to cards for readability.
+
+### 🐞 Fixes
+- Corrected CSS so only the logs table is hidden on phones (users table/cards remain visible).
+- Minor README cleanup (removed outdated notice).
+
+---
+
 ## v[1.10.0] - 2025-09-16
 
 
