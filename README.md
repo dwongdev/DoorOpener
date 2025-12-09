@@ -1,9 +1,3 @@
-# 🚨 !MAJOR CHANGE! - v1.10.0 User Management Migration
-
-> **⚠️ BREAKING CHANGE**: Starting with v1.10.0, user management has been completely redesigned with a new JSON-based user store. **Existing users in `config.ini` [pins] section need to be migrated!**
-
-see the CHANGELOG.MD for instructions
-
 [![CI](https://github.com/Sloth-on-meth/DoorOpener/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Sloth-on-meth/DoorOpener/actions/workflows/ci.yml)
 [![Docker Build](https://github.com/Sloth-on-meth/DoorOpener/actions/workflows/docker-build.yml/badge.svg?branch=main)](https://github.com/Sloth-on-meth/DoorOpener/actions/workflows/docker-build.yml)
 ![Version 1.10.0](https://img.shields.io/badge/version-1.10.0-blue?style=flat-square)
