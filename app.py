@@ -151,9 +151,12 @@ def get_effective_user_pins() -> dict:
 
 
 # Admin Configuration
-admin_password = config.get(
-    "admin", "admin_password", fallback="4384339380437neghrjlkmfef"
-)
+admin_password = config.get("admin", "admin_password", fallback=None)
+if not admin_password:
+    raise RuntimeError(
+        "No admin password configured. Set [admin] admin_password in config.ini "
+        "or ensure the config file exists."
+    )
 
 # Server Configuration
 server_port = int(
