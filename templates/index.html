@@ -526,7 +526,10 @@
     <div id="battery-container"
         style="position: fixed; bottom: 20px; right: 80px; display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: rgba(255,255,255,0.25); border-radius: 50px; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.3); z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
         <div id="battery-icon"
-            style="width: 20px; height: 10px; border: 1px solid rgba(0,0,0,0.5); border-radius: 1px; position: relative; background: linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%);">
+            style="width: 20px; height: 10px; border: 1px solid rgba(0,0,0,0.5); border-radius: 1px; position: relative; background: transparent; overflow: hidden;">
+            <div id="battery-fill"
+                style="height: 100%; width: 0%; border-radius: 1px; background: linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%); transition: width 0.4s, background 0.4s;">
+            </div>
             <div
                 style="position: absolute; right: -3px; top: 1px; width: 1.5px; height: 6px; background: rgba(0,0,0,0.5); border-radius: 0 1px 1px 0;">
             </div>
@@ -653,7 +656,7 @@
                             // Fancy "ta-da" vibration pattern: short-long-short with crescendo
                             window.navigator.vibrate([50, 30, 150, 50, 80, 30, 200]);
                         }
-                        showAccessGrantedPopup();
+                        showAccessPopup('accessGrantedPopup');
                     } else {
                         if ((status === 429 || status === 401) && data && data.blocked_until) {
                             startBlockCountdown(data.blocked_until);
@@ -668,7 +671,7 @@
 
                         // Play failure sound and enhanced vibration
                         playFailureSound();
-                        showAccessDeniedPopup();
+                        showAccessPopup('accessDeniedPopup');
                         if (window.navigator.vibrate) {
                             // Enhanced failure vibration pattern: strong buzz with pauses
                             window.navigator.vibrate([200, 100, 200, 100, 300]);
@@ -709,7 +712,7 @@
                     if (status === 200 && data.status === 'success') {
                         showStatus('Success: ' + data.message, 'success');
                         playSuccessSound();
-                        showAccessGrantedPopup();
+                        showAccessPopup('accessGrantedPopup');
                         if (window.navigator.vibrate) window.navigator.vibrate([50, 30, 150, 50, 80, 30, 200]);
                     } else {
                         if ((status === 429 || status === 401) && data && data.blocked_until) {
@@ -720,7 +723,7 @@
                         submitBtn.style.background = 'linear-gradient(135deg, #dc3545, #c82333)';
                         submitBtn.textContent = '✗';
                         playFailureSound();
-                        showAccessDeniedPopup();
+                        showAccessPopup('accessDeniedPopup');
                         if (window.navigator.vibrate) window.navigator.vibrate([200, 100, 200, 100, 300]);
                     }
                 })
@@ -785,27 +788,27 @@
         }
 
         function updateBatteryLevel(level) {
-            const batteryIcon = document.getElementById('battery-icon');
-            const batteryLevel = document.getElementById('battery-level');
-            if (batteryLevel) {
-                batteryLevel.textContent = (level !== null && level !== undefined) ? `${level}%` : '--';
+            const batteryFill = document.getElementById('battery-fill');
+            const batteryLevelEl = document.getElementById('battery-level');
+            if (batteryLevelEl) {
+                batteryLevelEl.textContent = (level !== null && level !== undefined) ? `${level}%` : '--';
             }
-
-            // Update battery fill based on level
+            if (!batteryFill) return;
+            if (level === null || level === undefined) {
+                batteryFill.style.width = '0%';
+                batteryFill.style.background = 'rgba(0,0,0,0.15)';
+                return;
+            }
+            batteryFill.style.width = `${level}%`;
             if (level >= 80) {
-                batteryIcon.style.background = 'linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%)';
+                batteryFill.style.background = 'linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%)';
             } else if (level >= 50) {
-                batteryIcon.style.background = 'linear-gradient(90deg, #8BC34A 0%, #CDDC39 100%)';
+                batteryFill.style.background = 'linear-gradient(90deg, #8BC34A 0%, #CDDC39 100%)';
             } else if (level >= 20) {
-                batteryIcon.style.background = 'linear-gradient(90deg, #FFC107 0%, #FF9800 100%)';
+                batteryFill.style.background = 'linear-gradient(90deg, #FFC107 0%, #FF9800 100%)';
             } else {
-                batteryIcon.style.background = 'linear-gradient(90deg, #F44336 0%, #E91E63 100%)';
+                batteryFill.style.background = 'linear-gradient(90deg, #F44336 0%, #E91E63 100%)';
             }
-
-            // Animate the fill width based on battery level
-            const fillWidth = level ? `${level}%` : '0%';
-            batteryIcon.style.backgroundSize = `${fillWidth} 100%`;
-            batteryIcon.style.backgroundRepeat = 'no-repeat';
         }
 
         function fetchBatteryLevel() {
@@ -903,38 +906,19 @@
             } catch (e) { }
         }
 
-        // Show Matrix-style ACCESS DENIED popup
-        function showAccessDeniedPopup() {
-            const popup = document.getElementById('accessDeniedPopup');
-            if (popup) {
-                popup.style.display = 'block';
-                setTimeout(() => {
-                    popup.style.opacity = '1';
-                    popup.style.top = '-10px';
-                }, 10);
-                setTimeout(() => {
-                    popup.style.opacity = '0';
-                    popup.style.top = '-60px';
-                    setTimeout(() => { popup.style.display = 'none'; }, 400);
-                }, 1700);
-            }
-        }
-
-        // Show Matrix-style ACCESS GRANTED popup
-        function showAccessGrantedPopup() {
-            const popup = document.getElementById('accessGrantedPopup');
-            if (popup) {
-                popup.style.display = 'block';
-                setTimeout(() => {
-                    popup.style.opacity = '1';
-                    popup.style.top = '-10px';
-                }, 10);
-                setTimeout(() => {
-                    popup.style.opacity = '0';
-                    popup.style.top = '-60px';
-                    setTimeout(() => { popup.style.display = 'none'; }, 400);
-                }, 1700);
-            }
+        function showAccessPopup(id) {
+            const popup = document.getElementById(id);
+            if (!popup) return;
+            popup.style.display = 'block';
+            setTimeout(() => {
+                popup.style.opacity = '1';
+                popup.style.top = '-10px';
+            }, 10);
+            setTimeout(() => {
+                popup.style.opacity = '0';
+                popup.style.top = '-60px';
+                setTimeout(() => { popup.style.display = 'none'; }, 400);
+            }, 1700);
         }
 
 
@@ -944,8 +928,9 @@
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('/service-worker.js').catch(() => { /* ignore */ });
             }
-            // Initial battery level fetch
+            // Initial battery level fetch, then refresh every 60 seconds
             fetchBatteryLevel();
+            setInterval(fetchBatteryLevel, 60000);
 
             // Query authentication status for OIDC UX
             fetch('/auth/status', { credentials: 'same-origin', cache: 'no-store' })

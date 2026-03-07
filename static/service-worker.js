@@ -5,7 +5,7 @@ const ASSETS = [
   '/static/background.jpg',
   '/static/favicon.png',
   '/static/gear.png',
-  '/static/manifest.webmanifest'
+  '/manifest.webmanifest'
 ];
 
 self.addEventListener('install', (event) => {
