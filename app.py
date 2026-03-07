@@ -8,6 +8,7 @@ enhanced multi-layer security, timezone support, and comprehensive brute force p
 import os
 import json
 import time
+import hmac
 import logging
 from logging.handlers import RotatingFileHandler
 import requests
@@ -370,10 +371,6 @@ def is_request_suspicious():
     suspicious_agents = ["curl", "wget", "python-requests", "bot", "crawler"]
     if any(agent in user_agent.lower() for agent in suspicious_agents):
         return True
-
-    # Check for rapid requests (basic timing check)
-    if not hasattr(request, "start_time"):
-        request.start_time = get_current_time()
 
     return False
 
@@ -798,7 +795,7 @@ def open_door():
 
         # Check PIN against user database (effective set)
         for user, user_pin in get_effective_user_pins().items():
-            if pin_from_request == user_pin:
+            if hmac.compare_digest(pin_from_request, user_pin):
                 matched_user = user
                 break
 
@@ -985,10 +982,6 @@ def open_door():
                 ip_blocked_until[identifier] = now + BLOCK_TIME
                 reason = f"Invalid PIN. Access blocked for {int(BLOCK_TIME.total_seconds()//60)} minutes"
             else:
-                # Apply progressive delay based on session attempts (more secure)
-                delay = get_delay_seconds(session_failed_attempts[session_id])
-                if delay > 0:
-                    time.sleep(delay)
                 remaining_attempts = min(
                     SESSION_MAX_ATTEMPTS - session_failed_attempts[session_id],
                     MAX_ATTEMPTS - ip_failed_attempts[identifier],
@@ -1228,7 +1221,7 @@ def admin_auth():
             429,
         )
 
-    if password == admin_password:
+    if hmac.compare_digest(password, admin_password):
         # Success: clear counters for this session
         session_failed_attempts[session_id] = 0
         if session_id in session_blocked_until:
@@ -1260,11 +1253,8 @@ def admin_auth():
         )
         return jsonify({"status": "success"})
     else:
-        # Failure: increment counters and apply progressive delay
+        # Failure: increment counters
         session_failed_attempts[session_id] += 1
-        delay = get_delay_seconds(session_failed_attempts[session_id])
-        if delay > 0:
-            time.sleep(delay)
 
         # Block session after SESSION_MAX_ATTEMPTS failures
         if session_failed_attempts[session_id] >= SESSION_MAX_ATTEMPTS:
