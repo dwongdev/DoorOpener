@@ -201,7 +201,11 @@ if (
 
 # Home Assistant Configuration
 ha_url = config.get("HomeAssistant", "url", fallback="http://homeassistant.local:8123")
-ha_token = config.get("HomeAssistant", "token")
+ha_token = config.get("HomeAssistant", "token", fallback=None)
+if not ha_token:
+    raise RuntimeError(
+        "No Home Assistant token configured. Set [HomeAssistant] token in config.ini."
+    )
 entity_id = config.get(
     "HomeAssistant", "switch_entity"
 )  # Backward compatible; can be lock or switch
@@ -340,11 +344,6 @@ def add_security_headers(response):
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     response.headers["Pragma"] = "no-cache"
     return response
-
-
-def get_delay_seconds(attempt_count):
-    """Calculate progressive delay: 1s, 2s, 4s, 8s, 16s"""
-    return min(2 ** (attempt_count - 1), 16) if attempt_count > 0 else 0
 
 
 def check_global_rate_limit():

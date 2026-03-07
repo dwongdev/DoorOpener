@@ -1,6 +1,7 @@
 import json
 import os
-from datetime import datetime
+import tempfile
+from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 
 
@@ -8,8 +9,7 @@ ISO_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
 
 
 def _now_iso() -> str:
-    # naive datetime.isoformat() is fine; app already logs timezone-aware timestamps elsewhere
-    return datetime.utcnow().isoformat()
+    return datetime.now(timezone.utc).isoformat()
 
 
 class UsersStore:
@@ -30,9 +30,6 @@ class UsersStore:
         self.path = path
         self.data: Dict[str, Any] = {"users": {}}
         self._loaded = False
-
-    def _ensure_loaded(self) -> None:
-        self._load_file()
 
     def _load_file(self) -> None:
         if self._loaded:
@@ -56,9 +53,19 @@ class UsersStore:
             self._loaded = True
 
     def _save_atomic(self) -> None:
-        os.makedirs(os.path.dirname(self.path), exist_ok=True)
-        with open(self.path, "w", encoding="utf-8") as f:
-            json.dump(self.data, f, ensure_ascii=False, indent=2)
+        dir_path = os.path.dirname(self.path)
+        os.makedirs(dir_path, exist_ok=True)
+        fd, tmp_path = tempfile.mkstemp(dir=dir_path, suffix=".tmp")
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                json.dump(self.data, f, ensure_ascii=False, indent=2)
+            os.replace(tmp_path, self.path)
+        except Exception:
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
+            raise
 
     def effective_pins(self, base_pins: Dict[str, str]) -> Dict[str, str]:
         self._load_file()
