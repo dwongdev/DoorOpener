@@ -701,7 +701,10 @@
         try {
             const res = await fetch('/admin/check-auth', { credentials: 'same-origin', cache: 'no-store' });
             const data = await res.json();
-            if (data.authenticated) await showDashboard();
+            if (data.authenticated) {
+                if (data.csrf_token) csrfToken = data.csrf_token;
+                await showDashboard();
+            }
         } catch (e) {}
     }
 
