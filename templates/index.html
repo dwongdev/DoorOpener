@@ -415,6 +415,17 @@
             color: #fff;
         }
 
+        .keypad-btn.submit-btn.submitting {
+            cursor: wait;
+            animation: submit-pulse 0.55s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+
+        @keyframes submit-pulse {
+            from { opacity: 0.55; transform: scale(0.96); }
+            to   { opacity: 1;   transform: scale(1.04); }
+        }
+
         /* Gear icon spin and label */
         .gear-spin-wrap {
             position: fixed;
