@@ -295,6 +295,29 @@
             color: #00e676;
         }
 
+        .toast.success.welcome {
+            min-width: 280px;
+            padding: 1.1rem 1.4rem 1.2rem;
+        }
+
+        .toast.success.welcome .toast-sub {
+            display: block;
+            font-size: 0.8rem;
+            opacity: 0.6;
+            margin-bottom: 0.35rem;
+            letter-spacing: 0.02em;
+        }
+
+        .toast.success.welcome .toast-welcome {
+            display: block;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #00e676;
+            letter-spacing: 0.01em;
+            text-shadow: 0 0 18px rgba(0, 230, 118, 0.55), 0 0 4px rgba(0, 230, 118, 0.3);
+            line-height: 1.2;
+        }
+
         .toast.error {
             border-left-color: #ff3b3b;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.36), 0 0 0 1px rgba(255, 59, 59, 0.12), inset 3px 0 24px rgba(255, 59, 59, 0.07);
@@ -1208,11 +1231,29 @@
                 });
         }
 
+        function escapeHtml(str) {
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
         function showStatus(message, type, persistent) {
             const toastContainer = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = 'toast ' + type;
-            toast.textContent = message;
+
+            // Special rendering for "Welcome home" success messages
+            const welcomeMatch = type === 'success' && message.match(/Welcome home[^!]*!/);
+            if (welcomeMatch) {
+                toast.classList.add('welcome');
+                const parts = message.replace(/^Success:\s*/, '').split('\n');
+                const subText = parts[0] || '';
+                const welcomeText = parts[1] || welcomeMatch[0];
+                toast.innerHTML =
+                    `<span class="toast-sub">${escapeHtml(subText)}</span>` +
+                    `<span class="toast-welcome">${escapeHtml(welcomeText)}</span>`;
+            } else {
+                toast.textContent = message;
+            }
+
             toastContainer.appendChild(toast);
             setTimeout(() => {
                 toast.classList.add('show');
