@@ -1,3 +1,35 @@
+## v[1.11.0] - 2026-03-08
+
+### 🎨 UI/UX
+- **Dark mode** — full automatic dark theme via `prefers-color-scheme: dark`, covering keypad, battery widget, admin gear, PIN display, and all interactive states
+- **Battery widget overhaul** — fill bar now correctly clips to the reported percentage using `overflow: hidden` + child `width: %`; null and out-of-range values render as 0% with a grey fill instead of broken display; widget auto-polls every 60 seconds without page reload
+- **Keypad disabled state** — buttons grey out (`opacity: 0.35`, `pointer-events: none`) and become non-interactive for the full duration of a brute-force block countdown
+- **GPU-accelerated popup animation** — access-granted/denied popups now animate with `transform: translateY()` instead of `top`, eliminating layout reflow on every frame
+- **PIN placeholder** — "Enter PIN" placeholder no longer inherits `letter-spacing: 8px`; spacing is applied only to entered dot characters
+
+### 🛠️ Technical
+- **Atomic user store writes** — `users.json` is written via `tempfile.mkstemp` + `os.replace`, preventing file corruption if the process crashes mid-write
+- **CSS consolidation** — merged two duplicate `.container` blocks and two duplicate `@media (max-width: 480px)` blocks; all inline styles moved to named CSS classes
+- **Popup deduplication** — `showAccessDeniedPopup` and `showAccessGrantedPopup` unified into a single `showAccessPopup(id)` helper
+
+### 🧪 Tests
+- 13 new tests covering previously uncovered paths:
+  - `/admin/check-auth` (authenticated and unauthenticated)
+  - `/admin/logs/clear` (all modes, missing file, invalid mode, unauthenticated)
+  - PIN length boundaries (too short, too long, empty, non-JSON body)
+  - `UsersStore.effective_pins` with inactive users and invalid PINs in the store
+
+### ⚙️ CI
+- Python matrix expanded to **3.10 + 3.12**
+- Pip caching added to all jobs
+- `bandit` now fails the build on medium+ severity findings (removed `|| true`)
+- `ruff` lint job no longer uses `continue-on-error`; `ruff format --check` step added
+- Docker login switched from `GHCR_PAT` secret to `GITHUB_TOKEN` (no secret management needed)
+- All actions pinned to `@v4` / `setup-python@v5`
+- Redundant `pycodestyle` workflow removed (superseded by ruff)
+
+---
+
 ## v[1.10.1] - 2025-12-09
 
 ### 🎨 UI/UX

@@ -1,19 +1,19 @@
 [![CI](https://github.com/Sloth-on-meth/DoorOpener/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Sloth-on-meth/DoorOpener/actions/workflows/ci.yml)
 [![Docker Build](https://github.com/Sloth-on-meth/DoorOpener/actions/workflows/docker-build.yml/badge.svg?branch=main)](https://github.com/Sloth-on-meth/DoorOpener/actions/workflows/docker-build.yml)
-![Version 1.10.0](https://img.shields.io/badge/version-1.10.0-blue?style=flat-square)
+![Version 1.11.0](https://img.shields.io/badge/version-1.11.0-blue?style=flat-square)
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Q5Q81T7CVO)
 <details>
   <summary><strong>🚨 Help Wanted: Security / HA Addon (please expand)</strong></summary>
 
-  
-  
+
+
   ### Home Assistant Add-on Needed!
   **I couldn't figure out how to turn this project into a proper Home Assistant add-on. If you know how, please open a PR!**
 
   > **Important:** Any add-on solution must not break standalone usage. The project must remain fully usable both as a Home Assistant add-on _and_ as a standalone app (Docker).
 
   ### Security audit needed!
-  > I’ve implemented an OIDC setup with some security measures in place, but I’m not fully confident in how robust the implementation is. I’d really appreciate someone with experience taking a look and providing feedback on potential improvements.
+  > I've implemented an OIDC setup with some security measures in place, but I'm not fully confident in how robust the implementation is. I'd really appreciate someone with experience taking a look and providing feedback on potential improvements.
 
 </details>
 
@@ -22,7 +22,6 @@
 # 🚪 DoorOpener
 
 A pretty web interface for controlling smart door openers via Home Assistant. Features a modern glass-morphism UI with visual keypad, per-user PINs, audio feedback, battery monitoring, and comprehensive security.
-
 
 
 
@@ -39,12 +38,26 @@ DoorOpener provides a web-based keypad interface to remotely open doors connecte
 - Visual 3x4 keypad interface with auto-submit
 - Individual PINs for each user with JSON-based user management
 - Audio feedback (success chimes, failure sounds)
-- Real-time battery monitoring for Zigbee devices
+- Real-time battery monitoring for Zigbee devices (auto-refreshes every 60 s)
 - Multi-layer security with rate limiting and IP blocking
-- **NEW**: Complete admin UI with user management and migration tools
-- **NEW**: Toast notifications and modern responsive design
+- Complete admin UI with user management and migration tools
+- Toast notifications and modern responsive design
+- **Full dark mode** support (`prefers-color-scheme`)
+- **PWA / installable** — works offline via service worker
+- Keypad locks out visually during brute-force block countdown
 - Test mode for safe development
 - **Supports Home Assistant `switch`, `lock`, and `input_boolean` entities**
+
+## What's New in v1.11
+
+- **Dark mode** — automatic dark theme honouring OS preference
+- **Battery widget fix** — fill bar now reflects actual percentage; null/out-of-range values handled gracefully; auto-polls every 60 s
+- **Keypad disabled state** — buttons visually grey out and are non-interactive during a block countdown
+- **GPU-accelerated popup animation** — access-denied/granted popups now animate with `transform` instead of `top` (no layout thrash)
+- **CSS housekeeping** — merged duplicate `.container` and `@media` blocks; all inline styles moved to CSS classes
+- **Atomic user store writes** — `users.json` is now written via `tempfile` + `os.replace` to prevent corruption on crash
+- **CI improvements** — Python 3.10 + 3.12 matrix, pip caching, bandit/ruff now fail the build, `ruff format` check added, Docker login uses `GITHUB_TOKEN` (no PAT needed), `pycodestyle` workflow removed (redundant with ruff)
+- **Test coverage** — 13 new tests covering `/admin/check-auth`, `/admin/logs/clear`, PIN length boundaries, and `UsersStore.effective_pins` edge cases
 
 ## Quick Start
 
@@ -86,7 +99,7 @@ docker build -t dooropener:latest .
 docker run -d --env-file .env -v $(pwd)/config.ini:/app/config.ini:ro -v $(pwd)/logs:/app/logs -p 6532:6532 dooropener:latest
 ```
 
- 
+
 
 
 <!--
@@ -162,7 +175,7 @@ test_mode = false
 
 [security]
 # Maximum failed attempts per IP before blocking
-max_attempts = 5 
+max_attempts = 5
 # Block time in minutes after max attempts reached
 block_time_minutes = 5
 # Maximum global attempts per hour across all users
@@ -223,7 +236,7 @@ DoorOpener v1.10.0+ includes a modern JSON-based user management system alongsid
 3. **Review Config Users**: You'll see existing config.ini users marked as "Config-only"
 4. **Bulk Migration**: Click the "⬇️ Migrate All" button
 5. **Confirm**: Review the migration dialog and click "OK"
-6. **Automatic Process**: 
+6. **Automatic Process**:
    - Users are created in JSON store with existing PINs
    - Original entries are removed from config.ini
    - No service interruption or restarts required
@@ -331,7 +344,7 @@ Notes:
 - **Configurable Rate Limiting** - Customizable failed attempt limits and block times
 - **Multi-Layer Protection** - IP-based, session-based, and global rate limiting
 - **Progressive Delays** - Increasing delays (1s→16s) after failed attempts
-- **Session Tracking** - Prevents easy bypass of security measures  
+- **Session Tracking** - Prevents easy bypass of security measures
 - **Audit Logging** - All attempts logged with timestamps, IPs, and results
 - **Input Validation** - PIN format validation and request sanitization
 - **Security Headers** - XSS protection, clickjacking prevention, CSP
