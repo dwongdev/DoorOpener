@@ -1211,7 +1211,8 @@ def admin_check_auth():
     """Check if admin is currently authenticated"""
     if session.get("admin_authenticated"):
         login_time = session.get("admin_login_time")
-        return jsonify({"authenticated": True, "login_time": login_time})
+        csrf_token = session.get("admin_csrf_token")
+        return jsonify({"authenticated": True, "login_time": login_time, "csrf_token": csrf_token})
     else:
         return jsonify({"authenticated": False})
 
