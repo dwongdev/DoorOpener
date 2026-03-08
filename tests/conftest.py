@@ -1,4 +1,5 @@
 """Pytest configuration and fixtures for DoorOpener tests."""
+
 import os
 import sys
 import json
@@ -40,9 +41,9 @@ def setup_mocks():
     with patch("configparser.ConfigParser") as mock_config:
         mock_config.return_value = MagicMock()
         mock_config.return_value.has_section.return_value = True
-        mock_config.return_value.get.side_effect = lambda s, k, **kw: (
-            TEST_CONFIG.get(s, {}).get(k, kw.get("fallback"))
-        )
+        mock_config.return_value.get.side_effect = lambda s, k, **kw: TEST_CONFIG.get(
+            s, {}
+        ).get(k, kw.get("fallback"))
         mock_config.return_value.items.return_value = TEST_CONFIG["pins"].items()
         mock_config.return_value.getboolean.side_effect = lambda s, k, **kw: (
             str(TEST_CONFIG.get(s, {}).get(k, "")).lower() == "true"

@@ -169,8 +169,9 @@ def test_admin_logs_old_format_parsing(monkeypatch):
     from io import StringIO
 
     file_obj = StringIO(old_line)
-    with patch("os.path.exists", return_value=True), patch(
-        "builtins.open", return_value=file_obj
+    with (
+        patch("os.path.exists", return_value=True),
+        patch("builtins.open", return_value=file_obj),
     ):
         c = client_app()
         with c.session_transaction() as s:

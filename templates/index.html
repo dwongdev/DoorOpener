@@ -260,33 +260,54 @@
         }
 
         .toast {
-            min-width: 180px;
-            max-width: 320px;
-            margin-top: 0.5rem;
-            background: #333;
-            color: #fff;
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+            min-width: 200px;
+            max-width: 340px;
+            background: rgba(16, 16, 22, 0.82);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            color: #f0f0f0;
+            padding: 0.85rem 1.3rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-left: 3px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.36), 0 1px 4px rgba(0, 0, 0, 0.2);
             opacity: 0;
-            transform: translateY(40px);
-            transition: opacity 0.4s, transform 0.4s;
-            font-size: 1rem;
+            transform: translateX(48px);
+            transition: opacity 0.32s cubic-bezier(.4, 0, .2, 1), transform 0.32s cubic-bezier(.4, 0, .2, 1);
+            font-size: 0.95rem;
+            line-height: 1.45;
             pointer-events: auto;
             word-break: break-word;
         }
 
+        .toast::before {
+            margin-right: 0.5em;
+            font-weight: 700;
+        }
+
         .toast.success {
-            background: #27ae60;
+            border-left-color: #00e676;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.36), 0 0 0 1px rgba(0, 230, 118, 0.12), inset 3px 0 24px rgba(0, 230, 118, 0.07);
+        }
+
+        .toast.success::before {
+            content: '✓';
+            color: #00e676;
         }
 
         .toast.error {
-            background: #c0392b;
+            border-left-color: #ff3b3b;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.36), 0 0 0 1px rgba(255, 59, 59, 0.12), inset 3px 0 24px rgba(255, 59, 59, 0.07);
+        }
+
+        .toast.error::before {
+            content: '✕';
+            color: #ff3b3b;
         }
 
         .toast.show {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateX(0);
         }
 
         @media (max-width: 600px) {
@@ -469,36 +490,48 @@
             position: absolute;
             top: -90px;
             left: 50%;
-            transform: translateX(-50%) translateY(-16px);
+            transform: translateX(-50%) translateY(-20px) scale(0.92);
             z-index: 10;
-            background: rgba(0, 0, 0, 0.95);
+            background: rgba(0, 0, 0, 0.52);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             font-family: 'Courier New', monospace;
-            font-size: 2rem;
-            padding: 18px 36px;
-            border-radius: 14px;
-            letter-spacing: 2px;
+            font-size: 1.65rem;
+            font-weight: 700;
+            padding: 16px 34px;
+            border-radius: 16px;
+            letter-spacing: 4px;
             pointer-events: none;
             opacity: 0;
-            transition: opacity 0.35s, transform 0.35s;
+            white-space: nowrap;
+            transition: opacity 0.28s cubic-bezier(.4, 0, .2, 1), transform 0.28s cubic-bezier(.4, 0, .2, 1);
         }
 
         .access-popup.visible {
             opacity: 1;
-            transform: translateX(-50%) translateY(0);
+            transform: translateX(-50%) translateY(0) scale(1);
         }
 
         .access-popup.denied {
-            color: #ff0000;
-            border: 2px solid #ff0000;
-            box-shadow: 0 8px 32px 0 rgba(255, 0, 0, 0.18), 0 2px 16px 0 rgba(0, 0, 0, 0.3);
-            text-shadow: 0 0 8px #ff0000, 0 0 2px #ff0000;
+            color: #ff3b3b;
+            border: 1.5px solid rgba(255, 59, 59, 0.55);
+            box-shadow: 0 0 28px rgba(255, 59, 59, 0.4), 0 0 64px rgba(255, 59, 59, 0.15), inset 0 0 24px rgba(255, 59, 59, 0.07);
+            text-shadow: 0 0 14px rgba(255, 59, 59, 0.95), 0 0 36px rgba(255, 59, 59, 0.45);
+        }
+
+        .access-popup.denied::before {
+            content: '✕  ';
         }
 
         .access-popup.granted {
-            color: #00ff88;
-            border: 2px solid #00ff88;
-            box-shadow: 0 8px 32px 0 rgba(0, 255, 136, 0.18), 0 2px 16px 0 rgba(0, 0, 0, 0.3);
-            text-shadow: 0 0 8px #00ff88, 0 0 2px #00ff88;
+            color: #00e676;
+            border: 1.5px solid rgba(0, 230, 118, 0.55);
+            box-shadow: 0 0 28px rgba(0, 230, 118, 0.4), 0 0 64px rgba(0, 230, 118, 0.15), inset 0 0 24px rgba(0, 230, 118, 0.07);
+            text-shadow: 0 0 14px rgba(0, 230, 118, 0.95), 0 0 36px rgba(0, 230, 118, 0.45);
+        }
+
+        .access-popup.granted::before {
+            content: '✓  ';
         }
 
         /* PIN display */

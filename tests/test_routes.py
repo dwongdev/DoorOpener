@@ -73,9 +73,9 @@ def test_counters_not_reset_on_success_when_block_active(client, monkeypatch):
     app_module.test_mode = True
 
     # Apply active in-memory session block
-    app_module.session_blocked_until[
-        "sessBlock"
-    ] = app_module.get_current_time() + timedelta(seconds=30)
+    app_module.session_blocked_until["sessBlock"] = (
+        app_module.get_current_time() + timedelta(seconds=30)
+    )
 
     headers = {
         "User-Agent": "pytest-client/1.0 (+https://example.test)",

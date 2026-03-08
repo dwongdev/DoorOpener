@@ -278,10 +278,10 @@ def test_admin_users_migrate_single(mock_users_store, monkeypatch):
     mock_config.remove_option.return_value = None
     mock_config.write = MagicMock()
 
-    with patch("configparser.ConfigParser", return_value=mock_config), patch(
-        "builtins.open", MagicMock()
+    with (
+        patch("configparser.ConfigParser", return_value=mock_config),
+        patch("builtins.open", MagicMock()),
     ):
-
         c = client_app()
         _admin_session(c)
 
@@ -311,10 +311,10 @@ def test_admin_users_migrate_all(mock_users_store, monkeypatch):
     mock_config.remove_option.return_value = None
     mock_config.write = MagicMock()
 
-    with patch("configparser.ConfigParser", return_value=mock_config), patch(
-        "builtins.open", MagicMock()
+    with (
+        patch("configparser.ConfigParser", return_value=mock_config),
+        patch("builtins.open", MagicMock()),
     ):
-
         c = client_app()
         _admin_session(c)
 

@@ -5,6 +5,7 @@ DoorOpener Web Portal v1.11
 A secure Flask web app to open a door via Home Assistant API, with visual keypad interface,
 enhanced multi-layer security, timezone support, and comprehensive brute force protection.
 """
+
 import os
 import json
 import time
@@ -976,10 +977,10 @@ def open_door():
                 session["blocked_until_ts"] = (
                     get_current_time() + BLOCK_TIME
                 ).timestamp()
-                reason = f"Invalid PIN. Session blocked for {int(BLOCK_TIME.total_seconds()//60)} minutes"
+                reason = f"Invalid PIN. Session blocked for {int(BLOCK_TIME.total_seconds() // 60)} minutes"
             elif ip_failed_attempts[identifier] >= MAX_ATTEMPTS:
                 ip_blocked_until[identifier] = now + BLOCK_TIME
-                reason = f"Invalid PIN. Access blocked for {int(BLOCK_TIME.total_seconds()//60)} minutes"
+                reason = f"Invalid PIN. Access blocked for {int(BLOCK_TIME.total_seconds() // 60)} minutes"
             else:
                 remaining_attempts = min(
                     SESSION_MAX_ATTEMPTS - session_failed_attempts[session_id],
@@ -1258,7 +1259,7 @@ def admin_auth():
         # Block session after SESSION_MAX_ATTEMPTS failures
         if session_failed_attempts[session_id] >= SESSION_MAX_ATTEMPTS:
             session_blocked_until[session_id] = now + BLOCK_TIME
-            details = f"Invalid admin password. Session blocked for {int(BLOCK_TIME.total_seconds()//60)} minutes"
+            details = f"Invalid admin password. Session blocked for {int(BLOCK_TIME.total_seconds() // 60)} minutes"
         else:
             remaining = SESSION_MAX_ATTEMPTS - session_failed_attempts[session_id]
             details = f"Invalid admin password. {remaining} attempts remaining"
@@ -1747,7 +1748,11 @@ def admin_users_migrate_all():
             # Log full exception details server-side for later troubleshooting
             logger.error(f"Failed to migrate user {username}: {e}", exc_info=True)
             failed.append(
-                {"username": username, "error": "store_write_failed", "detail": "internal_error"}
+                {
+                    "username": username,
+                    "error": "store_write_failed",
+                    "detail": "internal_error",
+                }
             )
 
     status = 200 if not failed else 207  # multi-status semantics

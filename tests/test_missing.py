@@ -1,4 +1,5 @@
 """Tests for previously uncovered routes and edge cases."""
+
 import json
 import os
 import tempfile
@@ -89,8 +90,20 @@ def test_logs_clear_all(tmp_path):
 
 def test_logs_clear_test_only(tmp_path):
     log_file = tmp_path / "attempts.log"
-    keep_line = json.dumps({"timestamp": "2025-01-01", "status": "SUCCESS", "details": "real"}) + "\n"
-    remove_line = json.dumps({"timestamp": "2025-01-01", "status": "FAIL", "details": "TEST MODE attempt"}) + "\n"
+    keep_line = (
+        json.dumps({"timestamp": "2025-01-01", "status": "SUCCESS", "details": "real"})
+        + "\n"
+    )
+    remove_line = (
+        json.dumps(
+            {
+                "timestamp": "2025-01-01",
+                "status": "FAIL",
+                "details": "TEST MODE attempt",
+            }
+        )
+        + "\n"
+    )
     log_file.write_text(keep_line + remove_line)
 
     import app as app_module
@@ -184,8 +197,8 @@ def test_effective_pins_inactive_user_excluded():
         effective = store.effective_pins(base)
 
         assert "alice" in effective
-        assert "bob" not in effective   # deactivated in JSON
-        assert "charlie" in effective   # only in base, implicitly active
+        assert "bob" not in effective  # deactivated in JSON
+        assert "charlie" in effective  # only in base, implicitly active
     finally:
         os.unlink(path)
 

@@ -302,8 +302,9 @@ def test_admin_logs_parsing(client, app_module, tmp_path):
     log_file.write_text(json.dumps(entry) + "\n", encoding="utf-8")
 
     # Patch the path used inside app.admin_logs to point to our temp file
-    with patch("app.os.path.exists", return_value=True), patch(
-        "app.os.path.join", return_value=str(log_file)
+    with (
+        patch("app.os.path.exists", return_value=True),
+        patch("app.os.path.join", return_value=str(log_file)),
     ):
         # Authenticate admin by flagging session
         with client.session_transaction() as s:
@@ -389,9 +390,9 @@ def test_inmemory_session_block_denies_oidc_pinless_and_returns_blocked_until(cl
         s["oidc_exp"] = int(_time.time()) + 3600
 
     # Apply in-memory session block
-    app_module.session_blocked_until[
-        "sessInMem"
-    ] = app_module.get_current_time() + timedelta(seconds=60)
+    app_module.session_blocked_until["sessInMem"] = (
+        app_module.get_current_time() + timedelta(seconds=60)
+    )
 
     r = client.post("/open-door", json={})
     assert r.status_code == 429
