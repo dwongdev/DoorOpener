@@ -452,10 +452,6 @@
         }
         .section-hd h2 { margin: 0; font-size: 1rem; font-weight: 700; color: #fff; }
 
-        /* === COMPACT === */
-        #dashboard.compact .data-table th,
-        #dashboard.compact .data-table td { padding: 6px 10px; font-size: 0.8rem; }
-
         /* === MOBILE CARDS === */
         @media (max-width: 768px) {
             body { padding: 10px; }
@@ -568,12 +564,6 @@
                             <option value="SUCCESS">Success</option>
                             <option value="FAILURE">Failure</option>
                         </select>
-                    </div>
-                    <div class="ctrl-group">
-                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
-                            <input type="checkbox" id="compactToggle" onchange="toggleCompact(event)" style="accent-color:#42a5f5;">
-                            <span class="ctrl-label" style="margin:0;">Compact</span>
-                        </label>
                     </div>
                     <div style="flex:1;"></div>
                     <button class="btn btn-success btn-sm" onclick="loadLogs()">↺ Refresh</button>
@@ -731,7 +721,6 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         checkAuthentication();
-        applyCompactFromStorage();
         document.getElementById('adminPassword').addEventListener('keypress', e => {
             if (e.key === 'Enter') login();
         });
@@ -1037,21 +1026,6 @@
                 </div>
             </div>`;
         }).join('');
-    }
-
-    // ====== COMPACT ======
-    function toggleCompact(ev) {
-        const on = !!ev.target.checked;
-        document.getElementById('dashboard').classList.toggle('compact', on);
-        try { localStorage.setItem('admin_compact', on ? '1' : '0'); } catch(e) {}
-    }
-    function applyCompactFromStorage() {
-        let on = false;
-        try { on = localStorage.getItem('admin_compact') === '1'; } catch(e) {}
-        const cb = document.getElementById('compactToggle');
-        if (cb) cb.checked = on;
-        const dash = document.getElementById('dashboard');
-        if (dash) dash.classList.toggle('compact', on);
     }
 
     // ====== MODALS ======

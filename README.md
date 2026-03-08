@@ -156,11 +156,7 @@ DoorOpener stores users in `users.json`. Manage them through the admin dashboard
 - View creation date, last used, and open count
 - Clear logs (test data or all)
 
-**Volume binding — make sure `users.json` is persisted:**
-```yaml
-volumes:
-  - ./users.json:/app/users.json
-```
+
 
 ---
 
