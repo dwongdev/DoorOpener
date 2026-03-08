@@ -35,11 +35,20 @@ def mock_users_store(temp_users_file, monkeypatch):
     return store
 
 
+CSRF_TOKEN = "test-csrf-token-12345"
+
+
 def _admin_session(client):
-    """Helper to create an authenticated admin session."""
+    """Helper to create an authenticated admin session with CSRF token."""
     with client.session_transaction() as s:
         s["admin_authenticated"] = True
         s["admin_login_time"] = datetime.now(timezone.utc).isoformat()
+        s["admin_csrf_token"] = CSRF_TOKEN
+
+
+def _csrf_headers():
+    """Headers with CSRF token for mutating admin requests."""
+    return {"X-CSRF-Token": CSRF_TOKEN}
 
 
 def test_admin_users_list_empty(mock_users_store, monkeypatch):
