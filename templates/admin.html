@@ -539,6 +539,7 @@
         <div class="tabs">
             <button id="tabLogsBtn" class="tab-btn active" onclick="switchTab('logs')">📋 Access Logs</button>
             <button id="tabUsersBtn" class="tab-btn" onclick="switchTab('users')">👥 Users</button>
+            <button id="tabActivityBtn" class="tab-btn" onclick="switchTab('activity')">📊 Activity</button>
         </div>
 
         <!-- Logs Tab -->
@@ -629,6 +630,20 @@
                     </table>
                 </div>
                 <div id="userCards" class="user-cards"></div>
+            </div>
+        </div>
+
+        <!-- Activity Tab -->
+        <div id="activityTab" style="display:none;">
+            <div class="glass panel">
+                <div class="section-hd" style="margin-bottom:1.4rem;">
+                    <h2>🕐 Activity by Hour</h2>
+                    <div style="display:flex; gap:14px; align-items:center; font-size:0.8rem; color:rgba(255,255,255,0.45);">
+                        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#42a5f5;margin-right:5px;vertical-align:middle;"></span>All</span>
+                        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#66bb6a;margin-right:5px;vertical-align:middle;"></span>Successful</span>
+                    </div>
+                </div>
+                <div id="hourlyChart" style="display:flex; align-items:flex-end; gap:3px; height:160px; padding-bottom:22px; position:relative;"></div>
             </div>
         </div>
 
@@ -754,6 +769,7 @@
         document.getElementById('statRate').textContent = rate + '%';
 
         updateLeaderboard();
+        if (document.getElementById('activityTab').style.display !== 'none') updateHourlyChart();
     }
 
     function updateLeaderboard() {
@@ -970,9 +986,57 @@
     function switchTab(tab) {
         document.getElementById('tabLogsBtn').classList.toggle('active', tab === 'logs');
         document.getElementById('tabUsersBtn').classList.toggle('active', tab === 'users');
-        document.getElementById('logsTab').style.display  = tab === 'logs'  ? 'block' : 'none';
-        document.getElementById('usersTab').style.display = tab === 'users' ? 'block' : 'none';
-        if (tab === 'logs') loadLogs(); else loadUsers();
+        document.getElementById('tabActivityBtn').classList.toggle('active', tab === 'activity');
+        document.getElementById('logsTab').style.display      = tab === 'logs'     ? 'block' : 'none';
+        document.getElementById('usersTab').style.display     = tab === 'users'    ? 'block' : 'none';
+        document.getElementById('activityTab').style.display  = tab === 'activity' ? 'block' : 'none';
+        if (tab === 'logs') loadLogs();
+        else if (tab === 'users') loadUsers();
+        else if (tab === 'activity') { if (!allLogs.length) loadLogs(); else updateHourlyChart(); }
+    }
+
+    // ====== HOURLY CHART ======
+    function updateHourlyChart() {
+        const counts = Array(24).fill(0);
+        const successes = Array(24).fill(0);
+        allLogs.forEach(l => {
+            if (!l.timestamp) return;
+            const h = new Date(l.timestamp).getHours();
+            if (isNaN(h)) return;
+            counts[h]++;
+            if (l.status === 'SUCCESS') successes[h]++;
+        });
+
+        const maxVal = Math.max(...counts, 1);
+        const labels = ['12a','1a','2a','3a','4a','5a','6a','7a','8a','9a','10a','11a',
+                        '12p','1p','2p','3p','4p','5p','6p','7p','8p','9p','10p','11p'];
+        const nowHour = new Date().getHours();
+
+        const wrap = document.getElementById('hourlyChart');
+        wrap.innerHTML = counts.map((cnt, h) => {
+            const totalPct  = Math.round(cnt / maxVal * 100);
+            const succPct   = cnt > 0 ? Math.round(successes[h] / maxVal * 100) : 0;
+            const isNow     = h === nowHour;
+            return `<div title="${labels[h]}: ${cnt} total, ${successes[h]} successful" style="
+                flex:1; display:flex; flex-direction:column; align-items:center;
+                justify-content:flex-end; gap:2px; position:relative; height:100%;
+                cursor:default;">
+                <div style="
+                    position:absolute; bottom:22px; width:100%; display:flex;
+                    flex-direction:column; justify-content:flex-end; height:calc(100% - 22px);">
+                    <div style="width:100%; height:${totalPct}%; background:rgba(66,165,245,0.25);
+                        border-radius:4px 4px 0 0; position:relative; transition:height 0.3s;">
+                        <div style="position:absolute; bottom:0; width:100%; height:${succPct * 100 / Math.max(totalPct,1)}%;
+                            background:rgba(102,187,106,0.7); border-radius:4px 4px 0 0;"></div>
+                    </div>
+                </div>
+                <div style="position:absolute; bottom:4px; font-size:0.6rem;
+                    color:${isNow ? '#fff' : 'rgba(255,255,255,0.3)'};
+                    font-weight:${isNow ? '700' : '400'}; white-space:nowrap;">
+                    ${labels[h]}
+                </div>
+            </div>`;
+        }).join('');
     }
 
     // ====== COMPACT ======
