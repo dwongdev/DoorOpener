@@ -19,7 +19,7 @@
 A web-based keypad for controlling smart door locks via Home Assistant. PIN-protected with per-user codes, SSO login, rate limiting, and a dark glassmorphism UI.
 
 <img width="1920" height="923" alt="keypad" src="https://github.com/user-attachments/assets/51f2e836-578d-4782-9156-3ba6e6752b59" />
-<img width="2554" alt="admin" src="https://github.com/user-attachments/assets/4d5259fa-ee7b-4d03-a02b-b77301cebf0c" />
+<img width="1197" height="462" alt="admin" src="https://github.com/user-attachments/assets/edb8a1ab-0767-43fa-9238-0ccd41e1b4fd" />
 <img width="1198" height="759" alt="image" src="https://github.com/user-attachments/assets/d84d9835-3a79-4be8-aebc-51fbe7f157ae" />
 
 ## Features
