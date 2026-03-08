@@ -1140,6 +1140,13 @@
             setKeypadDisabled(true);
             if (autoSubmitTimer) { clearTimeout(autoSubmitTimer); autoSubmitTimer = null; }
 
+            // Visual submitting state
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.classList.add('submitting');
+            submitBtn.textContent = '⟳';
+            const display = document.getElementById('pinDisplay');
+            display.innerHTML = '<span class="pin-placeholder">Sending…</span>';
+
             // Send request to open door
             fetch('/open-door', {
                 method: 'POST',
