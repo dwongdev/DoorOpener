@@ -1401,6 +1401,15 @@ def _require_admin_authenticated():
     return True
 
 
+def _check_admin_csrf():
+    """Validate X-CSRF-Token header for mutating admin requests."""
+    token = request.headers.get("X-CSRF-Token", "")
+    stored = session.get("admin_csrf_token", "")
+    if not stored or not token:
+        return False
+    return hmac.compare_digest(token, stored)
+
+
 @app.route("/admin/users", methods=["GET"])
 def admin_users_list():
     if not _require_admin_authenticated():
