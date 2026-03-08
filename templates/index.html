@@ -534,6 +534,89 @@
             content: '✓  ';
         }
 
+        /* Easter egg overlay */
+        #easter-egg-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.78);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        #easter-egg-overlay.egg-visible {
+            opacity: 1;
+        }
+
+        #confetti-canvas {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .egg-card {
+            position: relative;
+            text-align: center;
+            background: rgba(16, 16, 22, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2.5rem 3.5rem;
+            box-shadow: 0 0 60px rgba(0, 230, 118, 0.2), 0 0 120px rgba(33, 150, 243, 0.12);
+            animation: egg-appear 0.35s cubic-bezier(.4, 0, .2, 1) both;
+        }
+
+        .egg-numbers {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            justify-content: center;
+            font-size: 7rem;
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 0.8rem;
+        }
+
+        .egg-six {
+            color: #00e676;
+            text-shadow: 0 0 32px rgba(0, 230, 118, 0.9);
+            display: inline-block;
+            animation: egg-up 0.45s ease-in-out infinite;
+        }
+
+        .egg-seven {
+            color: #2196F3;
+            text-shadow: 0 0 32px rgba(33, 150, 243, 0.9);
+            display: inline-block;
+            animation: egg-down 0.45s ease-in-out infinite;
+        }
+
+        .egg-sub {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.55);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        @keyframes egg-appear {
+            from { transform: scale(0.5) translateY(30px); opacity: 0; }
+            to   { transform: scale(1)   translateY(0);    opacity: 1; }
+        }
+
+        @keyframes egg-up {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(-30px); }
+        }
+
+        @keyframes egg-down {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(30px); }
+        }
+
         /* PIN display */
         #pinDisplay {
             width: 280px;
@@ -851,6 +934,13 @@
                 currentPin += digit;
                 updatePinDisplay();
 
+                // Easter egg
+                if (currentPin === '6767') {
+                    if (autoSubmitTimer) { clearTimeout(autoSubmitTimer); autoSubmitTimer = null; }
+                    triggerEasterEgg();
+                    return;
+                }
+
                 // Haptic feedback
                 if (window.navigator.vibrate) {
                     window.navigator.vibrate(30);
@@ -901,6 +991,100 @@
         }
 
         let authStatus = { oidc_enabled: false, oidc_authenticated: false, require_pin_for_oidc: true };
+
+        function triggerEasterEgg() {
+            currentPin = '';
+            updatePinDisplay();
+
+            const overlay = document.createElement('div');
+            overlay.id = 'easter-egg-overlay';
+            overlay.innerHTML = `
+                <canvas id="confetti-canvas"></canvas>
+                <div class="egg-card">
+                    <div class="egg-numbers">
+                        <span class="egg-six">6</span>
+                        <span class="egg-seven">7</span>
+                    </div>
+                    <div class="egg-sub">six &nbsp; seven</div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+            setTimeout(() => overlay.classList.add('egg-visible'), 10);
+
+            launchConfetti(document.getElementById('confetti-canvas'));
+            playEasterEggSound();
+
+            if (window.navigator.vibrate) {
+                // Pulse in sync with each seesaw bounce (0.45s period, 10 cycles)
+                let pulses = 0;
+                const vibeInterval = setInterval(() => {
+                    window.navigator.vibrate(60);
+                    if (++pulses >= 10) clearInterval(vibeInterval);
+                }, 450);
+            }
+
+            setTimeout(() => {
+                overlay.classList.remove('egg-visible');
+                setTimeout(() => overlay.remove(), 450);
+            }, 4500);
+        }
+
+        function launchConfetti(canvas) {
+            if (!canvas) return;
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const ctx = canvas.getContext('2d');
+            const colors = ['#ff3b3b', '#00e676', '#2196F3', '#FFD700', '#FF69B4', '#00BCD4', '#FF9800'];
+            const particles = Array.from({ length: 130 }, () => ({
+                x: Math.random() * canvas.width,
+                y: -10 - Math.random() * 300,
+                r: 4 + Math.random() * 6,
+                d: 1.2 + Math.random() * 2.2,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                tilt: Math.random() * Math.PI * 2,
+                tiltSpeed: (Math.random() - 0.5) * 0.14,
+            }));
+            let frame = 0;
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.tilt);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.r / 2, -p.r / 2, p.r, p.r * 2.5);
+                    ctx.restore();
+                    p.y += p.d + Math.sin(frame * 0.05 + p.x) * 0.6;
+                    p.x += Math.sin(frame * 0.03 + p.y * 0.01) * 0.9;
+                    p.tilt += p.tiltSpeed;
+                });
+                frame++;
+                if (frame < 220) requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        function playEasterEggSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const now = ctx.currentTime;
+                // 8-bit "ta-daa" fanfare
+                [[523, 0, 0.1], [523, 0.11, 0.1], [523, 0.22, 0.1], [415, 0.33, 0.1],
+                 [523, 0.44, 0.16], [659, 0.61, 0.16], [784, 0.78, 0.45]].forEach(([freq, start, dur]) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(freq, now + start);
+                    gain.gain.setValueAtTime(0, now + start);
+                    gain.gain.linearRampToValueAtTime(0.16, now + start + 0.01);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + start + dur);
+                    osc.start(now + start);
+                    osc.stop(now + start + dur + 0.05);
+                });
+            } catch (e) { }
+        }
 
         function openDoor() {
             const pin = currentPin;
