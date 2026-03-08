@@ -1316,9 +1316,10 @@ def admin_logs_clear():
 
     Body: {"mode": "all" | "test_only"}
     """
-    # Check if admin is authenticated
     if not session.get("admin_authenticated"):
         return jsonify({"error": "Authentication required"}), 401
+    if not _check_admin_csrf():
+        return jsonify({"error": "Invalid CSRF token"}), 403
 
     body = request.get_json(silent=True) or {}
     mode = (body.get("mode") or "all").lower()
