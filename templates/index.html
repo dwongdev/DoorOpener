@@ -1126,6 +1126,7 @@
 
             if (isSubmitting) return; // Prevent concurrent submissions
             isSubmitting = true;
+            setKeypadDisabled(true);
             if (autoSubmitTimer) { clearTimeout(autoSubmitTimer); autoSubmitTimer = null; }
 
             // Send request to open door
@@ -1183,6 +1184,7 @@
 
                         currentPin = '';
                         updatePinDisplay();
+                        setKeypadDisabled(false);
                         isSubmitting = false;
                     }, 1200);
                 });
@@ -1191,6 +1193,7 @@
         function openDoorWithSSO() {
             if (isSubmitting) return;
             isSubmitting = true;
+            setKeypadDisabled(true);
             if (autoSubmitTimer) { clearTimeout(autoSubmitTimer); autoSubmitTimer = null; }
             // No PIN payload; rely on server-side OIDC session
             fetch('/open-door', {
@@ -1226,6 +1229,7 @@
                         const submitBtn = document.getElementById('submitBtn');
                         submitBtn.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
                         submitBtn.textContent = '✓';
+                        setKeypadDisabled(false);
                         isSubmitting = false;
                     }, 1200);
                 });
