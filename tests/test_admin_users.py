@@ -166,7 +166,7 @@ def test_admin_users_create(mock_users_store):
     c = client_app()
     _admin_session(c)
 
-    response = c.post("/admin/users", json={"username": "newuser", "pin": "1234", "active": True})
+    response = c.post("/admin/users", json={"username": "newuser", "pin": "1234", "active": True}, headers=_csrf_headers())
     assert response.status_code == 201
 
     data = response.get_json()
@@ -188,7 +188,7 @@ def test_admin_users_create_duplicate(mock_users_store):
     c = client_app()
     _admin_session(c)
 
-    response = c.post("/admin/users", json={"username": "existing", "pin": "5678", "active": True})
+    response = c.post("/admin/users", json={"username": "existing", "pin": "5678", "active": True}, headers=_csrf_headers())
     assert response.status_code == 409
 
     data = response.get_json()
