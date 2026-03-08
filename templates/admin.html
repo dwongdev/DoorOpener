@@ -712,7 +712,7 @@
     function logout() {
         fetch('/admin/logout', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
             credentials: 'same-origin',
             cache: 'no-store'
         }).finally(() => {
@@ -1083,7 +1083,7 @@
         try {
             const res = await fetch('/admin/users', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
                 credentials: 'same-origin',
                 cache: 'no-store',
                 body: JSON.stringify({ username, pin, active: true }),
@@ -1117,7 +1117,7 @@
             if (pin !== undefined) body.pin = pin;
             const res = await fetch('/admin/users/' + encodeURIComponent(username), {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
                 credentials: 'same-origin',
                 cache: 'no-store',
                 body: JSON.stringify(body),
@@ -1135,7 +1135,7 @@
         try {
             const res = await fetch('/admin/users/' + encodeURIComponent(username), {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
                 credentials: 'same-origin',
                 cache: 'no-store',
                 body: JSON.stringify({ active }),
@@ -1188,7 +1188,10 @@
         try {
             const restore = setButtonBusy(btnId, 'Migrating…');
             const res = await fetch('/admin/users/migrate-all', {
-                method: 'POST', credentials: 'same-origin', cache: 'no-store'
+                method: 'POST',
+                headers: { 'X-CSRF-Token': csrfToken },
+                credentials: 'same-origin',
+                cache: 'no-store'
             });
             const data = await res.json().catch(() => ({}));
             if (res.ok || res.status === 207) {
@@ -1217,7 +1220,7 @@
             const restore = setButtonBusy(btnId, 'Clearing…');
             const res = await fetch('/admin/logs/clear', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
                 credentials: 'same-origin',
                 cache: 'no-store',
                 body: JSON.stringify({ mode })

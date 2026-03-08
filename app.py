@@ -1220,8 +1220,11 @@ def admin_check_auth():
 @app.route("/admin/logout", methods=["POST"])
 def admin_logout():
     """Logout admin user"""
+    if not _check_admin_csrf():
+        return jsonify({"error": "Invalid CSRF token"}), 403
     session.pop("admin_authenticated", None)
     session.pop("admin_login_time", None)
+    session.pop("admin_csrf_token", None)
     session.permanent = False
     return jsonify({"status": "success", "message": "Logged out successfully"})
 
