@@ -875,7 +875,9 @@ def open_door():
                 try:
                     users_store.touch_user(matched_user)
                 except Exception:
-                    logger.exception("Error updating touch_user for PIN open (test mode)")
+                    logger.exception(
+                        "Error updating touch_user for PIN open (test mode)"
+                    )
                 display_name = matched_user.capitalize()
                 return jsonify(
                     {
@@ -917,7 +919,9 @@ def open_door():
                     try:
                         users_store.touch_user(matched_user)
                     except Exception:
-                        logger.exception("Error updating touch_user for PIN open (prod)")
+                        logger.exception(
+                            "Error updating touch_user for PIN open (prod)"
+                        )
                     display_name = matched_user.capitalize()
                     return jsonify(
                         {
