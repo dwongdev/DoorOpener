@@ -172,6 +172,8 @@ admin_password = secure_password
 port = 6532
 # Set to true for testing without opening door
 test_mode = false
+# Enable the 6-7 easter egg (disabled by default if key is missing)
+67mode = false
 
 [security]
 # Maximum failed attempts per IP before blocking
@@ -364,6 +366,19 @@ All security parameters are configurable via `config.ini`:
 - `POST /open-door` - Door control (requires PIN unless OIDC pinless is enabled and user is authorized)
 - `GET /battery` - Battery level data
 - `GET /admin` - Admin dashboard
+
+## Easter Egg
+
+Type `6767` on the keypad to trigger the **6-7 easter egg** — a full-screen overlay with the numbers doing the [6-7 meme](https://en.wikipedia.org/wiki/6-7_meme) seesaw animation, confetti, an 8-bit fanfare, and rhythmic haptic feedback.
+
+Disabled by default. To enable, add to `config.ini`:
+
+```ini
+[server]
+67mode = true
+```
+
+The easter egg check is stripped at template render time when disabled — no client-side code is shipped.
 
 ## Development
 
