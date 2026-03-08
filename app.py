@@ -713,7 +713,7 @@ def open_door():
                     try:
                         users_store.touch_user(matched_user)
                     except Exception:
-                        pass
+                        logger.exception("Error updating touch_user for OIDC open")
                     display_name = (
                         matched_user.capitalize()
                         if isinstance(matched_user, str)
@@ -875,7 +875,7 @@ def open_door():
                 try:
                     users_store.touch_user(matched_user)
                 except Exception:
-                    pass
+                    logger.exception("Error updating touch_user for PIN open (test mode)")
                 display_name = matched_user.capitalize()
                 return jsonify(
                     {
@@ -917,7 +917,7 @@ def open_door():
                     try:
                         users_store.touch_user(matched_user)
                     except Exception:
-                        pass
+                        logger.exception("Error updating touch_user for PIN open (prod)")
                     display_name = matched_user.capitalize()
                     return jsonify(
                         {
@@ -1455,7 +1455,9 @@ def admin_logs_clear():
                     if os.path.exists(tmp_path):
                         os.remove(tmp_path)
                 except Exception:
-                    pass
+                    logger.exception(
+                        f"Failed to remove temporary log file temp_path={tmp_path}"
+                    )
         else:
             return jsonify({"error": "Invalid mode"}), 400
 
