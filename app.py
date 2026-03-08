@@ -1156,6 +1156,7 @@ def admin_auth():
 
         session["admin_authenticated"] = True
         session["admin_login_time"] = now.isoformat()
+        session["admin_csrf_token"] = secrets.token_hex(32)
 
         # Set session to be permanent if remember_me is checked
         if remember_me:
