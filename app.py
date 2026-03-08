@@ -131,7 +131,7 @@ if not _env_secret:
                 "FLASK_SECRET_KEY not set and no [server] secret_key in config.ini; "
                 "sessions may become invalid across restarts or multiple workers."
             )
-    except Exception:
+    except Exception:  # nosec B110 - logging warning is best-effort; failure is non-critical
         pass
 
 # Per-user PINs from [pins] section (baseline, read-only)
@@ -1816,7 +1816,7 @@ def oidc_logout():
 
 if __name__ == "__main__":
     app.run(
-        host="0.0.0.0",
+        host="0.0.0.0",  # nosec B104 - intentional; server is designed to listen on all interfaces
         port=server_port,
         debug=os.environ.get("FLASK_DEBUG", "false").lower() == "true",
     )
