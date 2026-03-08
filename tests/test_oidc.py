@@ -98,10 +98,10 @@ def test_open_door_pinless_expired_oidc(monkeypatch):
         s["oidc_exp"] = 1
 
     resp = client.post("/open-door", json={})
-    assert resp.status_code == 400
+    assert resp.status_code == 401
     data = resp.get_json()
     assert data["status"] == "error"
-    assert "PIN" in data["message"]
+    assert "expired" in data["message"].lower()
 
 
 def test_login_sets_state_and_nonce_and_calls_authorize_redirect(monkeypatch):
