@@ -1489,6 +1489,8 @@ def admin_users_create():
 def admin_users_update(username: str):
     if not _require_admin_authenticated():
         return jsonify({"error": "Authentication required"}), 401
+    if not _check_admin_csrf():
+        return jsonify({"error": "Invalid CSRF token"}), 403
     if username in user_pins:
         return jsonify({"error": "Config-defined users cannot be edited via UI"}), 409
     try:
