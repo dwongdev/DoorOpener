@@ -1559,6 +1559,8 @@ def admin_users_migrate(username: str):
     """
     if not _require_admin_authenticated():
         return jsonify({"error": "Authentication required"}), 401
+    if not _check_admin_csrf():
+        return jsonify({"error": "Invalid CSRF token"}), 403
 
     # Get existing PIN from config
     existing_pin = user_pins.get(username)
