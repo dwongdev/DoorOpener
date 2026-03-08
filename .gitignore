@@ -43,3 +43,4 @@ logs/
 *.log
 users.json
 memory.md
+.claude/
