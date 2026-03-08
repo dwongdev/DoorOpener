@@ -3,175 +3,375 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Door Opener v1.8</title>
+    <title>Admin — Door Opener</title>
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <link rel="shortcut icon" href="/static/favicon.ico">
     <style>
+        * { box-sizing: border-box; }
+
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #f5f5f5;
+            min-height: 100vh;
             position: relative;
             overflow-x: hidden;
-            min-height: 100vh;
+            color: #e8eaf6;
         }
+
         body::before {
             content: '';
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
+            inset: 0;
             z-index: 0;
             background: url('/static/background.jpg') no-repeat center center fixed;
             background-size: cover;
-            opacity: 0.92;
             pointer-events: none;
         }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background: rgba(6, 8, 18, 0.62);
+            pointer-events: none;
+        }
+
         .container {
             position: relative;
             z-index: 1;
             max-width: 1200px;
             margin: 0 auto;
-            background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.2));
-            box-shadow: 
-                0 8px 32px 0 rgba(31, 38, 135, 0.2),
-                0 2px 16px 0 rgba(255, 255, 255, 0.3),
-                inset 0 1px 0 0 rgba(255, 255, 255, 0.5);
-            border-radius: 20px;
-            backdrop-filter: blur(15px) saturate(1.3);
-            -webkit-backdrop-filter: blur(15px) saturate(1.3);
-            border: 1px solid rgba(255,255,255,0.4);
-            padding: 2rem;
-            overflow: hidden;
         }
-        .container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
-            border-radius: 20px 20px 0 0;
+
+        /* === GLASS === */
+        .glass {
+            background: linear-gradient(135deg, rgba(255,255,255,0.09), rgba(255,255,255,0.03));
+            border: 1px solid rgba(255,255,255,0.11);
+            border-radius: 18px;
+            backdrop-filter: blur(22px) saturate(1.5);
+            -webkit-backdrop-filter: blur(22px) saturate(1.5);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.13);
         }
-        h1 {
-            color: rgba(0,0,0,0.8);
-            margin-bottom: 2rem;
-            font-weight: 600;
-            letter-spacing: -0.5px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+
+        /* === LOGIN === */
+        #loginForm {
+            max-width: 400px;
+            margin: 10vh auto 0;
+            padding: 2.5rem;
             text-align: center;
         }
-        .controls {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-            align-items: center;
+
+        #loginForm h1 {
+            margin: 0 0 2rem;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.5px;
         }
-        /* Tabs */
-        .tabs { display: flex; gap: 8px; margin: 0 0 1rem 0; }
-        .tab-btn {
-            padding: 10px 16px;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.35);
-            background: linear-gradient(135deg, rgba(255,255,255,0.35), rgba(255,255,255,0.20));
-            backdrop-filter: blur(10px);
-            cursor: pointer;
-            font-weight: 600;
-            color: rgba(0,0,0,0.8);
-        }
-        .tab-btn.active {
-            background: linear-gradient(135deg, #1976d2, #1565c0);
-            color: white;
-            border-color: rgba(255,255,255,0.6);
-            box-shadow: 0 4px 16px rgba(21,101,192,0.25);
-        }
-        .tab-panel { display: block; }
-        /* Card list for small screens */
-        .log-cards { display: none; }
-        .log-card {
-            background: rgba(255,255,255,0.25);
-            border: 1px solid rgba(255,255,255,0.35);
+
+        .login-input {
+            width: 100%;
+            padding: 14px 18px;
+            font-size: 16px;
             border-radius: 12px;
-            backdrop-filter: blur(10px);
-            padding: 12px;
+            border: 1px solid rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.07);
+            color: #fff;
+            font-weight: 500;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            margin-bottom: 1rem;
         }
-        .log-card .card-header {
+        .login-input::placeholder { color: rgba(255,255,255,0.35); }
+        .login-input:focus {
+            border-color: rgba(100,181,246,0.6);
+            box-shadow: 0 0 0 3px rgba(100,181,246,0.12);
+        }
+
+        .remember-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 14px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 1.2rem;
+            cursor: pointer;
+        }
+        .remember-label input { width: auto; accent-color: #42a5f5; }
+
+        /* === BUTTONS === */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            letter-spacing: 0.01em;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .btn:hover { transform: translateY(-1px); filter: brightness(1.12); }
+        .btn:active { transform: translateY(0); filter: brightness(0.95); }
+        .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+        .btn-primary { background: linear-gradient(135deg, #1976d2, #1255a4); color: #fff; box-shadow: 0 4px 14px rgba(21,101,192,0.3); }
+        .btn-success { background: linear-gradient(135deg, #2e7d32, #1b5e20); color: #fff; box-shadow: 0 4px 14px rgba(46,125,50,0.3); }
+        .btn-danger  { background: linear-gradient(135deg, #c62828, #8e0000); color: #fff; box-shadow: 0 4px 14px rgba(198,40,40,0.3); }
+        .btn-purple  { background: linear-gradient(135deg, #6a1b9a, #38006b); color: #fff; box-shadow: 0 4px 14px rgba(106,27,154,0.3); }
+        .btn-teal    { background: linear-gradient(135deg, #00695c, #003d33); color: #fff; box-shadow: 0 4px 14px rgba(0,105,92,0.3); }
+        .btn-ghost   { background: rgba(255,255,255,0.09); color: rgba(255,255,255,0.75); border: 1px solid rgba(255,255,255,0.18); }
+        .btn-ghost:hover { background: rgba(255,255,255,0.16); }
+        .btn-sm { padding: 6px 13px; font-size: 0.82rem; border-radius: 8px; }
+        .btn-full { width: 100%; padding: 13px; font-size: 1rem; }
+
+        /* === DASH HEADER === */
+        .dash-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            padding: 1.4rem 1.8rem;
+            margin-bottom: 1.4rem;
         }
-        .badge-status { 
-            display: inline-block; 
-            padding: 2px 8px; 
-            border-radius: 999px; 
-            font-size: 0.85em; 
-            font-weight: 700; 
-            letter-spacing: 0.3px;
+        .dash-header h1 {
+            margin: 0;
+            font-size: 1.55rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.5px;
         }
-        .badge-status.status-success { background: rgba(76, 175, 80, 0.15); color: #2e7d32; border: 1px solid rgba(76, 175, 80, 0.35); }
-        .badge-status.status-failure { background: rgba(244, 67, 54, 0.15); color: #c62828; border: 1px solid rgba(244, 67, 54, 0.35); }
-        .log-card .card-body { display: grid; gap: 6px; }
-        .card-row { display: grid; grid-template-columns: 32% 1fr; gap: 8px; }
-        .card-row .label { font-weight: 600; color: rgba(0,0,0,0.7); }
-        .card-row .value { color: rgba(0,0,0,0.85); word-break: break-word; }
-        /* Users cards (for mobile) */
-        .user-cards { display: none; }
-        .user-card {
-            background: rgba(255,255,255,0.25);
-            border: 1px solid rgba(255,255,255,0.35);
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-            padding: 12px;
+
+        /* === STATS === */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.4rem;
         }
-        .user-card .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .user-card .card-body { display: grid; gap: 6px; }
-        .user-badge { display:inline-block; padding:2px 8px; border-radius:999px; font-weight:700; font-size:0.85em; }
-        .user-badge.active { background: rgba(76,175,80,0.15); color:#2e7d32; border:1px solid rgba(76,175,80,0.35); }
-        .user-badge.inactive { background: rgba(244,67,54,0.15); color:#c62828; border:1px solid rgba(244,67,54,0.35); }
-        /* Responsive table wrapper */
-        .table-responsive {
-            width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            border-radius: 12px;
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25);
-            background: rgba(255,255,255,0.15);
+        @media (max-width: 700px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        .stat-card {
+            padding: 1.2rem 1.3rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
         }
-        .control-group {
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            border-radius: 18px 18px 0 0;
+        }
+        .stat-info::before    { background: linear-gradient(90deg, transparent, #64b5f6, transparent); }
+        .stat-success::before { background: linear-gradient(90deg, transparent, #69f0ae, transparent); }
+        .stat-danger::before  { background: linear-gradient(90deg, transparent, #ff5252, transparent); }
+        .stat-gold::before    { background: linear-gradient(90deg, transparent, #ffd740, transparent); }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 5px;
+            letter-spacing: -1.5px;
+        }
+        .stat-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.09em;
+            color: rgba(255,255,255,0.45);
+            font-weight: 700;
+        }
+        .stat-info .stat-value    { color: #64b5f6; }
+        .stat-success .stat-value { color: #69f0ae; }
+        .stat-danger .stat-value  { color: #ff5252; }
+        .stat-gold .stat-value    { color: #ffd740; }
+
+        /* === LEADERBOARD === */
+        .leaderboard {
+            padding: 1.4rem 1.6rem;
+            margin-bottom: 1.4rem;
+        }
+
+        .section-title {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 1.1rem;
+            font-weight: 700;
+        }
+
+        .lb-row {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 12px;
+            padding: 9px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
-        label {
-            font-weight: 600;
-            color: rgba(0,0,0,0.8);
+        .lb-row:last-child { border-bottom: none; }
+
+        .rank {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.8rem;
+            flex-shrink: 0;
         }
-        select, input {
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.4);
-            background: rgba(255,255,255,0.3);
-            backdrop-filter: blur(10px);
-            color: rgba(0,0,0,0.8);
-            font-weight: 500;
+        .rank-1 { background: linear-gradient(135deg, #ffd700, #ff8f00); color: #000; box-shadow: 0 2px 8px rgba(255,215,0,0.4); }
+        .rank-2 { background: linear-gradient(135deg, #bdbdbd, #9e9e9e); color: #000; }
+        .rank-3 { background: linear-gradient(135deg, #cd7f32, #a1590f); color: #fff; }
+        .rank-n { background: rgba(255,255,255,0.09); color: rgba(255,255,255,0.5); font-size: 0.75rem; }
+
+        .lb-name { flex: 0 0 120px; font-weight: 600; color: #fff; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .lb-bar-wrap { flex: 1; height: 5px; background: rgba(255,255,255,0.07); border-radius: 999px; overflow: hidden; }
+        .lb-bar { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #42a5f5, #1565c0); transition: width 0.9s cubic-bezier(.4,0,.2,1); }
+
+        .lb-count { font-size: 0.82rem; font-weight: 700; color: rgba(255,255,255,0.65); min-width: 28px; text-align: right; }
+        .lb-rate  { font-size: 0.75rem; color: #69f0ae; min-width: 36px; text-align: right; }
+
+        /* === TABS === */
+        .tabs {
+            display: flex;
+            gap: 5px;
+            padding: 5px;
+            background: rgba(0,0,0,0.25);
+            border-radius: 13px;
+            margin-bottom: 1.4rem;
+            border: 1px solid rgba(255,255,255,0.07);
         }
-        .refresh-btn {
-            padding: 8px 16px;
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
+        .tab-btn {
+            flex: 1;
+            padding: 10px 16px;
             border: none;
-            border-radius: 8px;
+            border-radius: 9px;
             cursor: pointer;
             font-weight: 600;
-            transition: all 0.3s ease;
+            font-size: 0.88rem;
+            color: rgba(255,255,255,0.42);
+            background: transparent;
+            transition: all 0.2s;
         }
-        .refresh-btn:hover {
-            background: linear-gradient(135deg, #45a049, #3e8e41);
-            transform: translateY(-1px);
+        .tab-btn.active {
+            background: linear-gradient(135deg, rgba(255,255,255,0.13), rgba(255,255,255,0.06));
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.13);
         }
-        /* Toasts */
+        .tab-btn:hover:not(.active) { color: rgba(255,255,255,0.75); background: rgba(255,255,255,0.05); }
+
+        /* === PANEL === */
+        .panel {
+            padding: 1.4rem 1.6rem;
+            margin-bottom: 1.4rem;
+        }
+
+        /* === CONTROLS === */
+        .controls {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.2rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .ctrl-group { display: flex; align-items: center; gap: 7px; }
+        .ctrl-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            white-space: nowrap;
+        }
+        select {
+            padding: 7px 11px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.13);
+            background: rgba(255,255,255,0.07);
+            color: #e8eaf6;
+            font-weight: 500;
+            font-size: 0.86rem;
+            outline: none;
+            transition: border-color 0.2s;
+            cursor: pointer;
+        }
+        select:focus { border-color: rgba(100,181,246,0.5); }
+        select option { background: #12151f; color: #e8eaf6; }
+
+        /* === TABLE === */
+        .table-wrap {
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.07);
+            overflow-x: auto;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 680px;
+        }
+        .data-table th {
+            background: rgba(0,0,0,0.2);
+            padding: 10px 13px;
+            text-align: left;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: rgba(255,255,255,0.38);
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            white-space: nowrap;
+        }
+        .data-table td {
+            padding: 11px 13px;
+            color: rgba(255,255,255,0.82);
+            border-bottom: 1px solid rgba(255,255,255,0.045);
+            font-size: 0.88rem;
+            vertical-align: middle;
+        }
+        .data-table tbody tr:last-child td { border-bottom: none; }
+        .data-table tbody tr:hover td { background: rgba(255,255,255,0.03); }
+
+        /* === BADGES === */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 9px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+        }
+        .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+        .badge-success  { background: rgba(105,240,174,0.1);  color: #69f0ae; border: 1px solid rgba(105,240,174,0.22); }
+        .badge-success::before  { background: #69f0ae; }
+        .badge-failure  { background: rgba(255,82,82,0.1);    color: #ff5252; border: 1px solid rgba(255,82,82,0.22); }
+        .badge-failure::before  { background: #ff5252; }
+        .badge-active   { background: rgba(105,240,174,0.1);  color: #69f0ae; border: 1px solid rgba(105,240,174,0.22); }
+        .badge-active::before   { background: #69f0ae; }
+        .badge-inactive { background: rgba(255,82,82,0.1);    color: #ff5252; border: 1px solid rgba(255,82,82,0.22); }
+        .badge-inactive::before { background: #ff5252; }
+        .badge-config   { background: rgba(255,215,64,0.1);   color: #ffd740; border: 1px solid rgba(255,215,64,0.22); }
+        .badge-config::before   { background: #ffd740; }
+        .badge-store    { background: rgba(100,181,246,0.1);  color: #64b5f6; border: 1px solid rgba(100,181,246,0.22); }
+        .badge-store::before    { background: #64b5f6; }
+
+        .no-data { text-align: center; padding: 3rem; color: rgba(255,255,255,0.25); font-style: italic; }
+
+        /* === TOASTS === */
         #toast-container {
             position: fixed;
             z-index: 9999;
@@ -187,915 +387,815 @@
         .toast {
             min-width: 180px;
             max-width: 320px;
-            margin-top: 0.5rem;
-            background: #333;
-            color: #fff;
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+            padding: 0.85rem 1.25rem;
+            border-radius: 12px;
+            font-size: 0.88rem;
+            font-weight: 600;
             opacity: 0;
-            transform: translateY(40px);
-            transition: opacity 0.4s, transform 0.4s;
-            font-size: 1rem;
+            transform: translateY(18px) scale(0.97);
+            transition: opacity 0.28s, transform 0.28s;
             pointer-events: auto;
             word-break: break-word;
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255,255,255,0.13);
+            box-shadow: 0 6px 24px rgba(0,0,0,0.45);
         }
-        .toast.success { background: #27ae60; }
-        .toast.error { background: #c0392b; }
-        .toast.show { opacity: 1; transform: translateY(0); }
-        .log-table {
+        .toast.success { background: rgba(20,80,28,0.94); color: #c8e6c9; }
+        .toast.error   { background: rgba(160,20,20,0.94); color: #ffcdd2; }
+        .toast.show    { opacity: 1; transform: translateY(0) scale(1); }
+
+        /* === MODALS === */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.65);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+        .modal-card {
+            min-width: 320px;
+            max-width: 92vw;
+            padding: 1.5rem;
+        }
+        .modal-field-label {
+            display: block;
+            margin: 10px 0 5px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: rgba(255,255,255,0.42);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .modal-input {
             width: 100%;
-            border-collapse: collapse;
-            background: rgba(255,255,255,0.2);
-            border-radius: 12px;
-            overflow: hidden;
-            backdrop-filter: blur(10px);
-            table-layout: auto;
-            min-width: 720px; /* ensure columns visible and allow horizontal scroll */
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.07);
+            color: #e8eaf6;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
         }
-        .log-table th {
-            background: rgba(255,255,255,0.3);
-            padding: 12px;
-            text-align: left;
-            font-weight: 600;
-            color: rgba(0,0,0,0.8);
-            border-bottom: 1px solid rgba(255,255,255,0.3);
+        .modal-input:focus { border-color: rgba(100,181,246,0.5); }
+        .modal-input::placeholder { color: rgba(255,255,255,0.3); }
+
+        /* === SECTION HEADER === */
+        .section-hd {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.1rem;
         }
-        .log-table td {
-            padding: 10px 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-            color: rgba(0,0,0,0.8);
-            word-break: break-word;
-            vertical-align: top;
-        }
-        .log-table tr:hover {
-            background: rgba(255,255,255,0.1);
-        }
-        .status-success {
-            color: #2e7d32;
-            font-weight: 600;
-        }
-        .status-failure {
-            color: #c62828;
-            font-weight: 600;
-        }
-        .no-logs {
-            text-align: center;
-            padding: 2rem;
-            color: rgba(0,0,0,0.6);
-            font-style: italic;
-        }
+        .section-hd h2 { margin: 0; font-size: 1rem; font-weight: 700; color: #fff; }
+
+        /* === COMPACT === */
+        #dashboard.compact .data-table th,
+        #dashboard.compact .data-table td { padding: 6px 10px; font-size: 0.8rem; }
+
+        /* === MOBILE CARDS === */
         @media (max-width: 768px) {
-            .container {
-                padding: 1rem;
-                margin: 10px;
-            }
-            .controls {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .control-group {
-                justify-content: space-between;
-            }
-            .log-table { font-size: 0.95rem; }
-            /* On phones, hide only the LOGS table and show cards instead */
+            body { padding: 10px; }
+            .panel { padding: 1rem 1.1rem; }
+            .leaderboard { padding: 1rem 1.1rem; }
+            .dash-header { padding: 1rem 1.2rem; }
+            .lb-name { flex: 0 0 90px; }
             #logContainer { display: none; }
-            .log-cards { display: grid; gap: 12px; }
-            /* For Users tab: hide table, show cards */
+            .log-cards { display: grid; gap: 10px; }
             #usersContainer { display: none; }
-            .user-cards { display: grid; gap: 12px; }
-            .log-table th,
-            .log-table td {
-                padding: 8px;
-            }
+            .user-cards { display: grid; gap: 10px; }
+        }
+        @media (min-width: 769px) {
+            .log-cards { display: none; }
+            .user-cards { display: none; }
         }
 
-        /* Card-style table for very small screens */
-        @media (max-width: 520px) {
-            .log-table,
-            .log-table thead,
-            .log-table tbody,
-            .log-table th,
-            .log-table td,
-            .log-table tr { display: block; width: 100%; }
-
-            .log-table thead { display: none; }
-            .log-table tr { margin: 0 0 12px 0; border: 1px solid rgba(255,255,255,0.25); border-radius: 10px; background: rgba(255,255,255,0.25); }
-            .log-table td { position: relative; padding-left: 44%; min-height: 42px; }
-            .log-table td::before {
-                content: attr(data-label);
-                position: absolute;
-                left: 12px;
-                top: 10px;
-                width: 38%;
-                font-weight: 600;
-                color: rgba(0,0,0,0.7);
-                white-space: normal;
-            }
-            .log-table td.no-logs { padding-left: 12px; }
-        }
-
-        /* Compact mode: reduced spacing and slightly smaller text */
-        #dashboard.compact .log-table { font-size: 0.85rem; }
-        #dashboard.compact .log-table th,
-        #dashboard.compact .log-table td { padding: 6px 8px; }
-        @media (max-width: 520px) {
-            #dashboard.compact .log-table td { padding-left: 38%; min-height: 36px; }
-            #dashboard.compact .log-table td::before { left: 10px; width: 34%; font-size: 0.9em; }
-        }
-        /* Compact mode for cards */
-        #dashboard.compact .log-card { padding: 8px; }
-        #dashboard.compact .card-row { grid-template-columns: 36% 1fr; gap: 6px; }
+        .mobile-card { padding: 13px 14px; border-radius: 12px; }
+        .mobile-card-hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .mobile-card-body { display: grid; gap: 6px; }
+        .mrow { display: grid; grid-template-columns: 34% 1fr; gap: 8px; font-size: 0.85rem; }
+        .mlabel { font-weight: 700; color: rgba(255,255,255,0.38); font-size: 0.73rem; text-transform: uppercase; letter-spacing: 0.05em; padding-top: 1px; }
+        .mvalue { color: rgba(255,255,255,0.88); word-break: break-word; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div id="loginForm" style="text-align: center;">
-            <h1>🔐 Admin Login</h1>
-            <div style="margin-bottom: 2rem;">
-                <input type="password" id="adminPassword" placeholder="Admin Password" 
-                       style="padding: 14px 18px; font-size: 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.4); background: rgba(255,255,255,0.3); backdrop-filter: blur(10px); width: 80%; max-width: 240px; color: rgba(0,0,0,0.8); font-weight: 500; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1rem;">
-                <br>
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 14px; color: rgba(0,0,0,0.7);">
-                        <input type="checkbox" id="rememberMe" style="width: auto;">
-                        Remember me for 30 days
-                    </label>
-                </div>
-                <button onclick="login()" style="padding: 12px 24px; background: linear-gradient(135deg, #4CAF50, #45a049); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">Login</button>
-                {% if oidc_enabled %}
-                <div style="margin: 1rem 0; color: rgba(0,0,0,0.6);">or</div>
-                <a href="/login" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #1976d2, #1565c0); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none;">
-                    Login with SSO
-                </a>
-                {% endif %}
-            </div>
-            <div id="loginError" style="color: #c62828; margin-top: 1rem; display: none;"></div>
+<div class="container">
+
+    <!-- ====== LOGIN ====== -->
+    <div id="loginForm" class="glass" style="max-width:400px; margin:10vh auto 0; padding:2.5rem; text-align:center;">
+        <h1>🔐 Admin Login</h1>
+        <input type="password" id="adminPassword" class="login-input" placeholder="Admin password">
+        <label class="remember-label">
+            <input type="checkbox" id="rememberMe"> Remember me for 30 days
+        </label>
+        <button onclick="login()" class="btn btn-primary btn-full">Sign In</button>
+        {% if oidc_enabled %}
+        <div style="margin:1.2rem 0; color:rgba(255,255,255,0.28); font-size:0.85rem;">— or —</div>
+        <a href="/login" class="btn btn-ghost btn-full">Login with SSO</a>
+        {% endif %}
+        <div id="loginError" style="color:#ff5252; margin-top:1rem; font-size:0.88rem; display:none;"></div>
+    </div>
+
+    <!-- ====== DASHBOARD ====== -->
+    <div id="dashboard" style="display:none;">
+
+        <!-- Header -->
+        <div class="glass dash-header">
+            <h1>🔐 Admin Dashboard</h1>
+            <button onclick="logout()" class="btn btn-danger btn-sm">Logout</button>
         </div>
 
-        <div id="dashboard" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                <h1>🔐 Admin Dashboard</h1>
-                <button onclick="logout()" style="padding: 8px 16px; background: linear-gradient(135deg, #f44336, #d32f2f); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">Logout</button>
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="glass stat-card stat-info">
+                <div class="stat-value" id="statTotal">—</div>
+                <div class="stat-label">Total Attempts</div>
             </div>
-            
-            <div class="tabs">
-                <button id="tabLogsBtn" class="tab-btn active" onclick="switchTab('logs')">🗂 Logs</button>
-                <button id="tabUsersBtn" class="tab-btn" onclick="switchTab('users')">👥 Users</button>
+            <div class="glass stat-card stat-success">
+                <div class="stat-value" id="statSuccess">—</div>
+                <div class="stat-label">Successful</div>
             </div>
+            <div class="glass stat-card stat-danger">
+                <div class="stat-value" id="statFailed">—</div>
+                <div class="stat-label">Failed</div>
+            </div>
+            <div class="glass stat-card stat-gold">
+                <div class="stat-value" id="statRate">—</div>
+                <div class="stat-label">Success Rate</div>
+            </div>
+        </div>
 
-            <div id="logsTab" class="tab-panel">
-            <div class="controls">
-            <div class="control-group">
-                <label for="sortBy">Sort by:</label>
-                <select id="sortBy" onchange="sortLogs()">
-                    <option value="time">Time (newest first)</option>
-                    <option value="time_asc">Time (oldest first)</option>
-                    <option value="user">User</option>
-                    <option value="status">Status</option>
-                </select>
-            </div>
-            <div class="control-group">
-                <label for="filterUser">Filter by user:</label>
-                <select id="filterUser" onchange="filterLogs()">
-                    <option value="">All users</option>
-                </select>
-            </div>
-            <div class="control-group">
-                <label for="filterStatus">Filter by status:</label>
-                <select id="filterStatus" onchange="filterLogs()">
-                    <option value="">All statuses</option>
-                    <option value="SUCCESS">Success</option>
-                    <option value="FAILURE">Failure</option>
-                </select>
-            </div>
-            <div class="control-group">
-                <label for="compactToggle">Density:</label>
-                <label style="display:flex; align-items:center; gap:0.5rem;">
-                    <input type="checkbox" id="compactToggle" onchange="toggleCompact(event)" />
-                    Compact
-                </label>
-            </div>
-                <button class="refresh-btn" onclick="loadLogs()">🔄 Refresh</button>
-                <div style="flex:1"></div>
-                <button id="btnClearAll" class="refresh-btn" style="background: linear-gradient(135deg, #e53935, #c62828);" onclick="openClearAll('btnClearAll')">🧹 Clear All Logs</button>
-            </div>
+        <!-- Leaderboard -->
+        <div class="glass leaderboard" id="leaderboardSection" style="display:none;">
+            <div class="section-title">🏆 Top Users — Successful Entries</div>
+            <div id="leaderboardRows"></div>
+        </div>
 
-            <div id="logContainer" class="table-responsive">
-            <table class="log-table">
-                <thead>
-                    <tr>
-                        <th>Timestamp</th>
-                        <th>IP Address</th>
-                        <th>User</th>
-                        <th>Status</th>
-                        <th>Details</th>
-                    </tr>
-                </thead>
-                <tbody id="logTableBody">
-                    <tr>
-                        <td colspan="5" class="no-logs">Loading logs...</td>
-                    </tr>
-                </tbody>
-            </table>
-            </div>
-            <div id="logCards" class="log-cards"></div>
-            </div>
+        <!-- Tabs -->
+        <div class="tabs">
+            <button id="tabLogsBtn" class="tab-btn active" onclick="switchTab('logs')">📋 Access Logs</button>
+            <button id="tabUsersBtn" class="tab-btn" onclick="switchTab('users')">👥 Users</button>
+        </div>
 
-            <div id="usersTab" class="tab-panel" style="display:none;">
-                <div style="display:flex; align-items:center; justify-content:space-between; margin: 0.5rem 0 1rem 0; gap:8px;">
-                    <h2 style="margin:0;">👥 User Management</h2>
+        <!-- Logs Tab -->
+        <div id="logsTab">
+            <div class="glass panel">
+                <div class="controls">
+                    <div class="ctrl-group">
+                        <span class="ctrl-label">Sort</span>
+                        <select id="sortBy" onchange="sortLogs()">
+                            <option value="time">Newest first</option>
+                            <option value="time_asc">Oldest first</option>
+                            <option value="user">User</option>
+                            <option value="status">Status</option>
+                        </select>
+                    </div>
+                    <div class="ctrl-group">
+                        <span class="ctrl-label">User</span>
+                        <select id="filterUser" onchange="filterLogs()">
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                    <div class="ctrl-group">
+                        <span class="ctrl-label">Status</span>
+                        <select id="filterStatus" onchange="filterLogs()">
+                            <option value="">All</option>
+                            <option value="SUCCESS">Success</option>
+                            <option value="FAILURE">Failure</option>
+                        </select>
+                    </div>
+                    <div class="ctrl-group">
+                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                            <input type="checkbox" id="compactToggle" onchange="toggleCompact(event)" style="accent-color:#42a5f5;">
+                            <span class="ctrl-label" style="margin:0;">Compact</span>
+                        </label>
+                    </div>
+                    <div style="flex:1;"></div>
+                    <button class="btn btn-success btn-sm" onclick="loadLogs()">↺ Refresh</button>
+                    <button id="btnClearAll" class="btn btn-danger btn-sm" onclick="openClearAll('btnClearAll')">🗑 Clear Logs</button>
+                </div>
+
+                <div id="logContainer" class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>IP</th>
+                                <th>User</th>
+                                <th>Status</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logTableBody">
+                            <tr><td colspan="5" class="no-data">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="logCards" class="log-cards"></div>
+            </div>
+        </div>
+
+        <!-- Users Tab -->
+        <div id="usersTab" style="display:none;">
+            <div class="glass panel">
+                <div class="section-hd">
+                    <h2>👥 User Management</h2>
                     <div style="display:flex; gap:8px;">
-                        <button id="btnMigrateAll" class="refresh-btn" onclick="openMigrateAll('btnMigrateAll')" style="background: linear-gradient(135deg, #7b1fa2, #6a1b9a);">⬇️ Migrate All</button>
-                        <button class="refresh-btn" onclick="openAddUser()" style="background: linear-gradient(135deg, #1976d2, #1565c0);">➕ Add User</button>
+                        <button id="btnMigrateAll" class="btn btn-purple btn-sm" onclick="openMigrateAll('btnMigrateAll')" style="display:none;">⬇ Migrate All</button>
+                        <button class="btn btn-primary btn-sm" onclick="openAddUser()">＋ Add User</button>
                     </div>
                 </div>
 
-                <div id="usersContainer" class="table-responsive">
-                    <table class="log-table" style="min-width: 720px;">
+                <div id="usersContainer" class="table-wrap">
+                    <table class="data-table">
                         <thead>
                             <tr>
                                 <th>Username</th>
-                                <th>Active</th>
+                                <th>Status</th>
                                 <th>Source</th>
                                 <th>Created</th>
                                 <th>Last Used</th>
-                                <th>Times Used</th>
+                                <th>Uses</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="usersTableBody">
-                            <tr>
-                                <td colspan="7" class="no-logs">Loading users...</td>
-                            </tr>
+                            <tr><td colspan="7" class="no-data">Loading…</td></tr>
                         </tbody>
                     </table>
                 </div>
-            <div id="userCards" class="user-cards"></div>
+                <div id="userCards" class="user-cards"></div>
             </div>
         </div>
-    </div>
 
-    <script>
-        let allLogs = [];
-        let filteredLogs = [];
-        let isAuthenticated = false;
+    </div><!-- /dashboard -->
+</div><!-- /container -->
 
-        async function login() {
-            const password = document.getElementById('adminPassword').value;
-            const rememberMe = document.getElementById('rememberMe').checked;
-            const errorDiv = document.getElementById('loginError');
+<div id="toast-container"></div>
 
-            try {
-                const res = await fetch('/admin/auth', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'same-origin',
-                    cache: 'no-store',
-                    body: JSON.stringify({ password, remember_me: rememberMe })
-                });
-                const data = await res.json();
-                if (data.status === 'success') {
-                    // Confirm session established before requesting logs
-                    const check = await fetch('/admin/check-auth', { credentials: 'same-origin', cache: 'no-store' });
-                    const checkData = await check.json();
-                    if (checkData.authenticated) {
-                        isAuthenticated = true;
-                        document.getElementById('loginForm').style.display = 'none';
-                        document.getElementById('dashboard').style.display = 'block';
-                        await Promise.all([loadLogs(), loadUsers()]);
-                    } else {
-                        // Small retry if cookie not visible yet
-                        await new Promise(r => setTimeout(r, 150));
-                        const check2 = await fetch('/admin/check-auth', { credentials: 'same-origin', cache: 'no-store' });
-                        const checkData2 = await check2.json();
-                        if (checkData2.authenticated) {
-                            isAuthenticated = true;
-                            document.getElementById('loginForm').style.display = 'none';
-                            document.getElementById('dashboard').style.display = 'block';
-                            await Promise.all([loadLogs(), loadUsers()]);
-                        } else {
-                            errorDiv.textContent = 'Login succeeded but session not established. Please try again.';
-                            errorDiv.style.display = 'block';
-                        }
-                    }
+<script>
+    let allLogs = [];
+    let filteredLogs = [];
+    let isAuthenticated = false;
+
+    // ====== AUTH ======
+    async function login() {
+        const password = document.getElementById('adminPassword').value;
+        const rememberMe = document.getElementById('rememberMe').checked;
+        const errorDiv = document.getElementById('loginError');
+        errorDiv.style.display = 'none';
+        try {
+            const res = await fetch('/admin/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                cache: 'no-store',
+                body: JSON.stringify({ password, remember_me: rememberMe })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                const check = await fetch('/admin/check-auth', { credentials: 'same-origin', cache: 'no-store' });
+                const checkData = await check.json();
+                if (checkData.authenticated) {
+                    await showDashboard();
                 } else {
-                    errorDiv.textContent = 'Invalid admin password';
-                    errorDiv.style.display = 'block';
+                    await new Promise(r => setTimeout(r, 150));
+                    const check2 = await fetch('/admin/check-auth', { credentials: 'same-origin', cache: 'no-store' });
+                    const checkData2 = await check2.json();
+                    if (checkData2.authenticated) {
+                        await showDashboard();
+                    } else {
+                        errorDiv.textContent = 'Login succeeded but session not established. Please try again.';
+                        errorDiv.style.display = 'block';
+                    }
                 }
-            } catch (error) {
-                errorDiv.textContent = 'Error connecting to server';
+            } else {
+                errorDiv.textContent = 'Invalid admin password';
                 errorDiv.style.display = 'block';
             }
+        } catch (error) {
+            errorDiv.textContent = 'Error connecting to server';
+            errorDiv.style.display = 'block';
         }
+    }
 
-        // Check if already authenticated on page load
-        async function checkAuthentication() {
-            try {
-                const res = await fetch('/admin/check-auth', { credentials: 'same-origin', cache: 'no-store' });
-                const data = await res.json();
-                if (data.authenticated) {
-                    isAuthenticated = true;
-                    document.getElementById('loginForm').style.display = 'none';
-                    document.getElementById('dashboard').style.display = 'block';
-                    await Promise.all([loadLogs(), loadUsers()]);
-                }
-            } catch (e) {
-                // Silent fail - user not authenticated
-            }
+    async function showDashboard() {
+        isAuthenticated = true;
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        await Promise.all([loadLogs(), loadUsers()]);
+    }
+
+    async function checkAuthentication() {
+        try {
+            const res = await fetch('/admin/check-auth', { credentials: 'same-origin', cache: 'no-store' });
+            const data = await res.json();
+            if (data.authenticated) await showDashboard();
+        } catch (e) {}
+    }
+
+    function logout() {
+        fetch('/admin/logout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            cache: 'no-store'
+        }).finally(() => {
+            isAuthenticated = false;
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('rememberMe').checked = false;
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        checkAuthentication();
+        applyCompactFromStorage();
+        document.getElementById('adminPassword').addEventListener('keypress', e => {
+            if (e.key === 'Enter') login();
+        });
+    });
+
+    // ====== LOGS ======
+    let _loading = false;
+    async function loadLogs() {
+        if (!isAuthenticated || _loading) return;
+        _loading = true;
+        try {
+            const res = await fetch('/admin/logs', { credentials: 'same-origin', cache: 'no-store' });
+            const data = await res.json();
+            allLogs = data.logs || [];
+            populateUserFilter();
+            filterLogs();
+            updateStats();
+        } catch (e) {
+            document.getElementById('logTableBody').innerHTML = '<tr><td colspan="5" class="no-data">Error loading logs</td></tr>';
+        } finally {
+            _loading = false;
         }
+    }
 
-        function logout() {
-            fetch('/admin/logout', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'same-origin',
-                cache: 'no-store'
-            })
-            .then(response => response.json())
-            .then(data => {
-                isAuthenticated = false;
-                document.getElementById('loginForm').style.display = 'block';
-                document.getElementById('dashboard').style.display = 'none';
-                document.getElementById('adminPassword').value = '';
-                document.getElementById('rememberMe').checked = false;
-            })
-            .catch(error => {
-                // Handle logout error silently
-                isAuthenticated = false;
-                document.getElementById('loginForm').style.display = 'block';
-                document.getElementById('dashboard').style.display = 'none';
-            });
-        }
+    // ====== STATS + LEADERBOARD ======
+    function updateStats() {
+        const total = allLogs.length;
+        const success = allLogs.filter(l => l.status === 'SUCCESS').length;
+        const failed = total - success;
+        const rate = total > 0 ? Math.round(success / total * 100) : 0;
 
-        // Allow Enter key to login
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check authentication on page load
-            checkAuthentication();
-            // Apply compact preference
-            applyCompactFromStorage();
-            
-            document.getElementById('adminPassword').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    login();
-                }
-            });
+        document.getElementById('statTotal').textContent = total;
+        document.getElementById('statSuccess').textContent = success;
+        document.getElementById('statFailed').textContent = failed;
+        document.getElementById('statRate').textContent = rate + '%';
+
+        // Build leaderboard from SUCCESS events only
+        const counts = {};
+        const totals = {};
+        allLogs.forEach(l => {
+            const u = l.user || 'Unknown';
+            totals[u] = (totals[u] || 0) + 1;
+            if (l.status === 'SUCCESS') counts[u] = (counts[u] || 0) + 1;
         });
 
-        let _loading = false;
-        async function loadLogs() {
-            if (!isAuthenticated || _loading) return;
-            _loading = true;
-            try {
-                const res = await fetch('/admin/logs', { credentials: 'same-origin', cache: 'no-store' });
-                const data = await res.json();
-                allLogs = data.logs || [];
-                populateUserFilter();
-                filterLogs();
-            } catch (e) {
-                document.getElementById('logTableBody').innerHTML = 
-                    '<tr><td colspan="5" class="no-logs">Error loading logs</td></tr>';
-            } finally {
-                _loading = false;
-            }
-        }
+        const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+        const maxCount = sorted.length ? sorted[0][1] : 1;
 
-        // --- User Management ---
-        async function loadUsers() {
-            try {
-                const res = await fetch('/admin/users', { credentials: 'same-origin', cache: 'no-store' });
-                const data = await res.json();
-                renderUsers(data.users || []);
-            } catch (e) {
-                const tbody = document.getElementById('usersTableBody');
-                if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="no-logs">Error loading users</td></tr>';
-            }
-        }
-
-        function renderUsers(users) {
-            const tbody = document.getElementById('usersTableBody');
-            const cards = document.getElementById('userCards');
-            if (!tbody) return;
-            if (!users.length) {
-                tbody.innerHTML = '<tr><td colspan="7" class="no-logs">No users found</td></tr>';
-                if (cards) cards.innerHTML = '<div class="user-card"><div class="card-body"><div>No users found</div></div></div>';
-                return;
-            }
-            
-            // Show/hide Migrate All button based on config-only users
-            const configUsers = users.filter(u => u.source === 'config');
-            const migrateAllBtn = document.getElementById('btnMigrateAll');
-            if (migrateAllBtn) {
-                migrateAllBtn.style.display = configUsers.length > 0 ? 'inline-block' : 'none';
-            }
-            const rows = users.map(u => {
-                const canEdit = !!u.can_edit;
-                const activeStr = u.active ? 'Yes' : 'No';
-                const created = u.created_at ? new Date(u.created_at).toLocaleString() : '-';
-                const lastUsed = u.last_used_at ? new Date(u.last_used_at).toLocaleString() : '-';
-                const timesUsed = u.times_used || 0;
-                const src = u.source || 'store';
-                let actionsHtml = '';
-                if (canEdit) {
-                    actionsHtml = `
-                        <button class="refresh-btn" style="padding:6px 10px; background: linear-gradient(135deg, #5e35b1, #4527a0);" onclick="openEditUser('${u.username}')">Edit</button>
-                        <button class="refresh-btn" style="padding:6px 10px; background: linear-gradient(135deg, #00897b, #00695c);" onclick="toggleActive('${u.username}', ${u.active ? 'false' : 'true'})">${u.active ? 'Deactivate' : 'Activate'}</button>
-                        <button class="refresh-btn" style="padding:6px 10px; background: linear-gradient(135deg, #e53935, #c62828);" onclick="deleteUser('${u.username}')">Delete</button>
-                    `;
-                } else {
-                    // Config-only user: show status only
-                    actionsHtml = `
-                        <span style="color:rgba(0,0,0,0.6);">Config-only</span>
-                    `;
-                }
-                return `
-                    <tr>
-                        <td data-label="Username">${u.username}</td>
-                        <td data-label="Active">${activeStr}</td>
-                        <td data-label="Source">${src}</td>
-                        <td data-label="Created">${created}</td>
-                        <td data-label="Last Used">${lastUsed}</td>
-                        <td data-label="Times Used">${timesUsed}</td>
-                        <td data-label="Actions" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">${actionsHtml}</td>
-                    </tr>
-                `;}).join('');
-            tbody.innerHTML = rows;
-
-            // Render mobile cards
-            if (cards) {
-                const cardsHtml = users.map(u => {
-                    const created = u.created_at ? new Date(u.created_at).toLocaleString() : '-';
-                    const lastUsed = u.last_used_at ? new Date(u.last_used_at).toLocaleString() : '-';
-                    const timesUsed = u.times_used || 0;
-                    const src = u.source || 'store';
-                    const badgeCls = u.active ? 'active' : 'inactive';
-                    const actions = u.can_edit ? `
-                        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
-                            <button class="refresh-btn" style="padding:6px 10px; background: linear-gradient(135deg, #5e35b1, #4527a0);" onclick="openEditUser('${u.username}')">Edit</button>
-                            <button class="refresh-btn" style="padding:6px 10px; background: linear-gradient(135deg, #00897b, #00695c);" onclick="toggleActive('${u.username}', ${u.active ? 'false' : 'true'})">${u.active ? 'Deactivate' : 'Activate'}</button>
-                            <button class="refresh-btn" style="padding:6px 10px; background: linear-gradient(135deg, #e53935, #c62828);" onclick="deleteUser('${u.username}')">Delete</button>
-                        </div>` : `<div style="color:rgba(0,0,0,0.6);">Config-only</div>`;
-                    return `
-                        <div class="user-card">
-                            <div class="card-header">
-                                <strong>${u.username}</strong>
-                                <span class="user-badge ${badgeCls}">${u.active ? 'Active' : 'Inactive'}</span>
-                            </div>
-                            <div class="card-body">
-                                <div><span class="label">Source:</span> ${src}</div>
-                                <div><span class="label">Created:</span> ${created}</div>
-                                <div><span class="label">Last Used:</span> ${lastUsed}</div>
-                                <div><span class="label">Times Used:</span> ${timesUsed}</div>
-                            </div>
-                            ${actions}
-                        </div>
-                    `;
-                }).join('');
-                cards.innerHTML = cardsHtml;
-            }
-        }
-
-        // --- Sexy Modal Framework ---
-        function showModal(title, fieldsHtml, onSubmit) {
-            const overlay = document.createElement('div');
-            overlay.className = 'modal-overlay';
-            overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; z-index:9999;';
-            const card = document.createElement('div');
-            card.style.cssText = 'min-width:320px; max-width:92vw; background: linear-gradient(135deg, rgba(255,255,255,0.5), rgba(255,255,255,0.25)); border:1px solid rgba(255,255,255,0.5); border-radius:16px; backdrop-filter: blur(14px); box-shadow: 0 12px 40px rgba(0,0,0,0.25); padding:20px;';
-            card.innerHTML = `
-                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-                    <h3 style="margin:0; color:rgba(0,0,0,0.85);">${title}</h3>
-                    <button id="modalCloseBtn" style="border:none; background:transparent; font-size:20px; cursor:pointer; color:rgba(0,0,0,0.6)">✕</button>
-                </div>
-                <div class="modal-body">${fieldsHtml}</div>
-                <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:14px;">
-                    <button id="modalCancel" class="refresh-btn" style="background: linear-gradient(135deg, #9e9e9e, #757575);">Cancel</button>
-                    <button id="modalOk" class="refresh-btn">OK</button>
-                </div>
-            `;
-            overlay.appendChild(card);
-            document.body.appendChild(overlay);
-
-            function close() { try { document.body.removeChild(overlay); } catch(e) {} }
-            overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
-            card.querySelector('#modalCloseBtn').addEventListener('click', close);
-            card.querySelector('#modalCancel').addEventListener('click', close);
-            card.querySelector('#modalOk').addEventListener('click', async () => {
-                try { await onSubmit(card); close(); } catch (e) { /* keep modal open on error */ }
-            });
-            return card;
-        }
-
-        function openAddUser() {
-            const fields = `
-                <label style="display:block; margin:6px 0 4px 2px; font-weight:600; color:rgba(0,0,0,0.8)">Username</label>
-                <input id="um_username" placeholder="letters, numbers, _-." style="width:100%">
-                <label style="display:block; margin:10px 0 4px 2px; font-weight:600; color:rgba(0,0,0,0.8)">PIN (4-8 digits)</label>
-                <input id="um_pin" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="e.g. 1234" style="width:100%">
-            `;
-            showModal('Add User', fields, async (card) => {
-                const username = card.querySelector('#um_username').value.trim();
-                const pin = card.querySelector('#um_pin').value.trim();
-                if (!username) { alert('Username required'); throw new Error('v'); }
-                if (!/^[-_.A-Za-z0-9]{1,32}$/.test(username)) { alert('Invalid username'); throw new Error('v'); }
-                if (!/^\d{4,8}$/.test(pin)) { alert('PIN must be 4-8 digits'); throw new Error('v'); }
-                await addUser(username, pin);
-            });
-        }
-
-        async function addUser(username, pin) {
-            try {
-                const res = await fetch('/admin/users', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'same-origin',
-                    cache: 'no-store',
-                    body: JSON.stringify({ username, pin, active: true }),
-                });
-                if (!res.ok) {
-                    const err = await res.json().catch(() => ({}));
-                    showToast('Create failed: ' + (err.error || res.status), 'error');
-                    return;
-                }
-                showToast('User created', 'success');
-                await loadUsers();
-            } catch (e) {
-                showToast('Create failed', 'error');
-            }
-        }
-
-        function openEditUser(username) {
-            const fields = `
-                <div style="color: rgba(0,0,0,0.7); margin-bottom:6px">Update PIN for <b>${username}</b></div>
-                <label style="display:block; margin:6px 0 4px 2px; font-weight:600; color:rgba(0,0,0,0.8)">New PIN (optional)</label>
-                <input id="um_newpin" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="leave blank to keep current" style="width:100%">
-            `;
-            showModal('Edit User', fields, async (card) => {
-                const pin = card.querySelector('#um_newpin').value.trim();
-                if (pin && !/^\d{4,8}$/.test(pin)) { showToast('PIN must be 4-8 digits', 'error'); throw new Error('v'); }
-                await editUser(username, pin || undefined);
-            });
-        }
-
-        async function editUser(username, pin) {
-            try {
-                const body = {};
-                if (pin !== undefined) body.pin = pin;
-                const res = await fetch('/admin/users/' + encodeURIComponent(username), {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'same-origin',
-                    cache: 'no-store',
-                    body: JSON.stringify(body),
-                });
-                if (!res.ok) {
-                    const err = await res.json().catch(() => ({}));
-                    showToast('Update failed: ' + (err.error || res.status), 'error');
-                    return;
-                }
-                showToast('User updated', 'success');
-                await loadUsers();
-            } catch (e) {
-                showToast('Update failed', 'error');
-            }
-        }
-
-        async function toggleActive(username, active) {
-            try {
-                const res = await fetch('/admin/users/' + encodeURIComponent(username), {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'same-origin',
-                    cache: 'no-store',
-                    body: JSON.stringify({ active }),
-                });
-                if (!res.ok) {
-                    const err = await res.json().catch(() => ({}));
-                    showToast('Toggle failed: ' + (err.error || res.status), 'error');
-                    return;
-                }
-                showToast('User ' + (active ? 'activated' : 'deactivated'), 'success');
-                await loadUsers();
-            } catch (e) {
-                showToast('Toggle failed', 'error');
-            }
-        }
-
-        async function deleteUser(username) {
-            if (!confirm('Delete user ' + username + '?')) return;
-            try {
-                const res = await fetch('/admin/users/' + encodeURIComponent(username), {
-                    method: 'DELETE',
-                    credentials: 'same-origin',
-                    cache: 'no-store',
-                });
-                if (!res.ok) {
-                    const err = await res.json().catch(() => ({}));
-                    showToast('Delete failed: ' + (err.error || res.status), 'error');
-                    return;
-                }
-                showToast('User deleted', 'success');
-                await loadUsers();
-            } catch (e) {
-                showToast('Delete failed', 'error');
-            }
-        }
-
-        // Individual migration functions removed - use Migrate All instead
-
-        function openMigrateAll(btnId) {
-            const fields = `
-                <div style="color: rgba(0,0,0,0.75); margin-bottom:8px">This will migrate all users from <code>config.ini</code> [pins] to the JSON user store using their existing PINs.</div>
-                <div style="font-size: 0.92em; color: rgba(0,0,0,0.6)">Proceed?</div>
-            `;
-            showModal('Migrate All Users', fields, async () => {
-                await migrateAll(btnId);
-            });
-        }
-
-        async function migrateAll(btnId) {
-            try {
-                const restore = setButtonBusy(btnId, 'Migrating…');
-                const res = await fetch('/admin/users/migrate-all', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    cache: 'no-store',
-                });
-                const data = await res.json().catch(() => ({}));
-                if (res.ok || res.status === 207) {
-                    const migrated = data.migrated || 0;
-                    const failed = (data.failed || []).length;
-                    showToast(`Migrated ${migrated} user(s)` + (failed ? `, ${failed} failed` : ''), failed ? 'error' : 'success');
-                    await loadUsers();
-                } else {
-                    showToast('Migrate-all failed: ' + (data.error || res.status), 'error');
-                }
-                if (typeof restore === 'function') restore();
-            } catch (e) {
-                showToast('Migrate-all failed', 'error');
-            }
-        }
-
-        function openClearAll(btnId) {
-            const fields = `
-                <div style="color: rgba(0,0,0,0.75); margin-bottom:8px">This will permanently remove all log entries.</div>
-                <div style="font-size: 0.92em; color: rgba(0,0,0,0.6)">Are you sure?</div>
-            `;
-            showModal('Clear All Logs', fields, async () => {
-                await clearLogs('all', btnId);
-            });
-        }
-
-        async function clearLogs(mode, btnId) {
-            try {
-                const restore = setButtonBusy(btnId, mode === 'all' ? 'Clearing…' : 'Removing…');
-                const res = await fetch('/admin/logs/clear', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'same-origin',
-                    cache: 'no-store',
-                    body: JSON.stringify({ mode })
-                });
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok) {
-                    showToast('Clear logs failed: ' + (data.error || res.status), 'error');
-                    if (typeof restore === 'function') restore();
-                    return;
-                }
-                const removed = data.removed ?? 0;
-                showToast((mode === 'all' ? 'All logs cleared' : `Removed ${removed} test entries`), 'success');
-                await loadLogs();
-                if (typeof restore === 'function') restore();
-            } catch (e) {
-                showToast('Clear logs failed', 'error');
-            }
-        }
-
-        function populateUserFilter() {
-            const userSelect = document.getElementById('filterUser');
-            const users = [...new Set(allLogs.map(log => log.user).filter(user => user))];
-            
-            // Clear existing options except "All users"
-            userSelect.innerHTML = '<option value="">All users</option>';
-            
-            users.sort().forEach(user => {
-                const option = document.createElement('option');
-                option.value = user;
-                option.textContent = user;
-                userSelect.appendChild(option);
-            });
-        }
-
-        function filterLogs() {
-            const userFilter = document.getElementById('filterUser').value;
-            const statusFilter = document.getElementById('filterStatus').value;
-
-            filteredLogs = allLogs.filter(log => {
-                const userMatch = !userFilter || log.user === userFilter;
-                const statusMatch = !statusFilter || log.status === statusFilter;
-                return userMatch && statusMatch;
-            });
-
-            sortLogs();
-        }
-
-        function sortLogs() {
-            const sortBy = document.getElementById('sortBy').value;
-
-            filteredLogs.sort((a, b) => {
-                switch(sortBy) {
-                    case 'time':
-                        // Sort by raw timestamp string for ISO format
-                        return b.timestamp.localeCompare(a.timestamp);
-                    case 'time_asc':
-                        return a.timestamp.localeCompare(b.timestamp);
-                    case 'user':
-                        return (a.user || 'UNKNOWN').localeCompare(b.user || 'UNKNOWN');
-                    case 'status':
-                        return a.status.localeCompare(b.status);
-                    default:
-                        return 0;
-                }
-            });
-
-            renderLogs();
-        }
-
-        function renderLogs() {
-            const tbody = document.getElementById('logTableBody');
-            const cardList = document.getElementById('logCards');
-            
-            if (filteredLogs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="no-logs">No logs found</td></tr>';
-                if (cardList) cardList.innerHTML = '<div class="log-card"><div class="card-body"><div class="card-row"><span class="label">Info</span><span class="value">No logs found</span></div></div></div>';
-                return;
-            }
-
-            const rowsHtml = filteredLogs.map(log => {
-                const statusClass = log.status === 'SUCCESS' ? 'status-success' : 'status-failure';
-                
-                // Parse ISO timestamp properly
-                let timestamp = log.timestamp;
-                try {
-                    const date = new Date(log.timestamp);
-                    if (!isNaN(date.getTime())) {
-                        timestamp = date.toLocaleString();
-                    }
-                } catch (e) {
-                    // Keep original timestamp if parsing fails
-                }
-                
-                return `
-                    <tr>
-                        <td data-label="Timestamp">${timestamp}</td>
-                        <td data-label="IP Address">${log.ip}</td>
-                        <td data-label="User">${log.user || 'UNKNOWN'}</td>
-                        <td class="${statusClass}" data-label="Status">${log.status}</td>
-                        <td data-label="Details">${log.details || '-'}</td>
-                    </tr>
-                `;
+        if (sorted.length) {
+            document.getElementById('leaderboardSection').style.display = 'block';
+            document.getElementById('leaderboardRows').innerHTML = sorted.map(([name, cnt], i) => {
+                const rankCls = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-n';
+                const pct = Math.round(cnt / maxCount * 100);
+                const sr = totals[name] > 0 ? Math.round(cnt / totals[name] * 100) : 0;
+                return `<div class="lb-row">
+                    <div class="rank ${rankCls}">${i + 1}</div>
+                    <div class="lb-name">${escapeHtml(name)}</div>
+                    <div class="lb-bar-wrap"><div class="lb-bar" style="width:${pct}%"></div></div>
+                    <div class="lb-count">${cnt}</div>
+                    <div class="lb-rate">${sr}%</div>
+                </div>`;
             }).join('');
-            tbody.innerHTML = rowsHtml;
+        } else {
+            document.getElementById('leaderboardSection').style.display = 'none';
+        }
+    }
 
-            if (cardList) {
-                const cardsHtml = filteredLogs.map(log => {
-                    const statusClass = log.status === 'SUCCESS' ? 'status-success' : 'status-failure';
-                    let timestamp = log.timestamp;
-                    try {
-                        const date = new Date(log.timestamp);
-                        if (!isNaN(date.getTime())) {
-                            timestamp = date.toLocaleString();
-                        }
-                    } catch (e) {}
-                    return `
-                        <div class="log-card">
-                            <td class="actions-cell">
-                                <span class="source-badge config-only">Config-only</span>
-                            </td>
-                            <div class="card-body">
-                                <div class="card-row"><span class="label">IP Address</span><span class="value">${log.ip}</span></div>
-                                <div class="card-row"><span class="label">User</span><span class="value">${log.user || 'UNKNOWN'}</span></div>
-                                <div class="card-row"><span class="label">Details</span><span class="value">${log.details || '-'}</span></div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-                cardList.innerHTML = cardsHtml;
-            }
+    // ====== USERS ======
+    async function loadUsers() {
+        try {
+            const res = await fetch('/admin/users', { credentials: 'same-origin', cache: 'no-store' });
+            const data = await res.json();
+            renderUsers(data.users || []);
+        } catch (e) {
+            const tbody = document.getElementById('usersTableBody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="no-data">Error loading users</td></tr>';
+        }
+    }
+
+    function renderUsers(users) {
+        const tbody = document.getElementById('usersTableBody');
+        const cards = document.getElementById('userCards');
+        if (!tbody) return;
+        if (!users.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="no-data">No users found</td></tr>';
+            if (cards) cards.innerHTML = '';
+            return;
         }
 
-        function toggleCompact(ev) {
-            const enabled = !!ev.target.checked;
-            const dash = document.getElementById('dashboard');
-            dash.classList.toggle('compact', enabled);
-            try { localStorage.setItem('admin_compact', enabled ? '1' : '0'); } catch (e) {}
-        }
+        const configUsers = users.filter(u => u.source === 'config');
+        const migrateBtn = document.getElementById('btnMigrateAll');
+        if (migrateBtn) migrateBtn.style.display = configUsers.length > 0 ? 'inline-flex' : 'none';
 
-        function applyCompactFromStorage() {
-            let enabled = false;
-            try { enabled = localStorage.getItem('admin_compact') === '1'; } catch (e) {}
-            const checkbox = document.getElementById('compactToggle');
-            if (checkbox) checkbox.checked = enabled;
-            const dash = document.getElementById('dashboard');
-            dash.classList.toggle('compact', enabled);
-        }
+        tbody.innerHTML = users.map(u => {
+            const activeBadge = u.active
+                ? '<span class="badge badge-active">Active</span>'
+                : '<span class="badge badge-inactive">Inactive</span>';
+            const srcBadge = u.source === 'config'
+                ? '<span class="badge badge-config">Config</span>'
+                : '<span class="badge badge-store">Store</span>';
+            const created  = u.created_at   ? new Date(u.created_at).toLocaleString()   : '—';
+            const lastUsed = u.last_used_at ? new Date(u.last_used_at).toLocaleString() : '—';
+            const uses = u.times_used || 0;
 
-        // Load logs on page load
-        document.addEventListener('DOMContentLoaded', loadLogs);
-
-        // Tabs logic
-        function switchTab(tab) {
-            const logsTab = document.getElementById('logsTab');
-            const usersTab = document.getElementById('usersTab');
-            const btnLogs = document.getElementById('tabLogsBtn');
-            const btnUsers = document.getElementById('tabUsersBtn');
-            if (tab === 'users') {
-                logsTab.style.display = 'none';
-                usersTab.style.display = 'block';
-                btnUsers.classList.add('active');
-                btnLogs.classList.remove('active');
-                loadUsers();
+            let actions = '';
+            if (u.can_edit) {
+                actions = `
+                    <button class="btn btn-purple btn-sm" onclick="openEditUser('${escapeHtml(u.username)}')">Edit</button>
+                    <button class="btn ${u.active ? 'btn-teal' : 'btn-success'} btn-sm"
+                            onclick="toggleActive('${escapeHtml(u.username)}', ${!u.active})">
+                        ${u.active ? 'Deactivate' : 'Activate'}
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteUser('${escapeHtml(u.username)}')">Delete</button>
+                `;
             } else {
-                usersTab.style.display = 'none';
-                logsTab.style.display = 'block';
-                btnLogs.classList.add('active');
-                btnUsers.classList.remove('active');
-                loadLogs();
+                actions = '<span style="font-size:0.8rem; color:rgba(255,255,255,0.3);">Config-only</span>';
             }
+            return `<tr>
+                <td style="font-weight:600;">${escapeHtml(u.username)}</td>
+                <td>${activeBadge}</td>
+                <td>${srcBadge}</td>
+                <td style="font-size:0.8rem; color:rgba(255,255,255,0.5);">${created}</td>
+                <td style="font-size:0.8rem; color:rgba(255,255,255,0.5);">${lastUsed}</td>
+                <td style="font-weight:700; color:#64b5f6;">${uses}</td>
+                <td><div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">${actions}</div></td>
+            </tr>`;
+        }).join('');
+
+        if (cards) {
+            cards.innerHTML = users.map(u => {
+                const lastUsed = u.last_used_at ? new Date(u.last_used_at).toLocaleString() : '—';
+                const actions = u.can_edit ? `
+                    <div style="display:flex; gap:7px; flex-wrap:wrap; margin-top:10px;">
+                        <button class="btn btn-purple btn-sm" onclick="openEditUser('${escapeHtml(u.username)}')">Edit</button>
+                        <button class="btn ${u.active ? 'btn-teal' : 'btn-success'} btn-sm"
+                                onclick="toggleActive('${escapeHtml(u.username)}', ${!u.active})">
+                            ${u.active ? 'Deactivate' : 'Activate'}
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteUser('${escapeHtml(u.username)}')">Delete</button>
+                    </div>` : '';
+                return `<div class="glass mobile-card">
+                    <div class="mobile-card-hd">
+                        <strong style="color:#fff;">${escapeHtml(u.username)}</strong>
+                        ${u.active ? '<span class="badge badge-active">Active</span>' : '<span class="badge badge-inactive">Inactive</span>'}
+                    </div>
+                    <div class="mobile-card-body">
+                        <div class="mrow"><span class="mlabel">Source</span><span class="mvalue">${escapeHtml(u.source||'store')}</span></div>
+                        <div class="mrow"><span class="mlabel">Uses</span><span class="mvalue" style="color:#64b5f6; font-weight:700;">${u.times_used||0}</span></div>
+                        <div class="mrow"><span class="mlabel">Last Used</span><span class="mvalue" style="font-size:0.8rem;">${lastUsed}</span></div>
+                    </div>
+                    ${actions}
+                </div>`;
+            }).join('');
+        }
+    }
+
+    // ====== LOG FILTER / SORT / RENDER ======
+    function populateUserFilter() {
+        const sel = document.getElementById('filterUser');
+        const users = [...new Set(allLogs.map(l => l.user).filter(Boolean))].sort();
+        sel.innerHTML = '<option value="">All</option>' +
+            users.map(u => `<option value="${escapeHtml(u)}">${escapeHtml(u)}</option>`).join('');
+    }
+
+    function filterLogs() {
+        const uf = document.getElementById('filterUser').value;
+        const sf = document.getElementById('filterStatus').value;
+        filteredLogs = allLogs.filter(l =>
+            (!uf || l.user === uf) && (!sf || l.status === sf)
+        );
+        sortLogs();
+    }
+
+    function sortLogs() {
+        const s = document.getElementById('sortBy').value;
+        filteredLogs.sort((a, b) => {
+            if (s === 'time')     return b.timestamp.localeCompare(a.timestamp);
+            if (s === 'time_asc') return a.timestamp.localeCompare(b.timestamp);
+            if (s === 'user')     return (a.user||'').localeCompare(b.user||'');
+            if (s === 'status')   return a.status.localeCompare(b.status);
+            return 0;
+        });
+        renderLogs();
+    }
+
+    function renderLogs() {
+        const tbody   = document.getElementById('logTableBody');
+        const cardEl  = document.getElementById('logCards');
+
+        if (!filteredLogs.length) {
+            tbody.innerHTML = '<tr><td colspan="5" class="no-data">No logs found</td></tr>';
+            if (cardEl) cardEl.innerHTML = '';
+            return;
         }
 
-        // Button busy helper
-        function setButtonBusy(id, busyLabel) {
-            if (!id) return null;
-            const el = document.getElementById(id);
-            if (!el) return null;
-            const orig = el.dataset.origLabel || el.textContent;
-            el.dataset.origLabel = orig;
-            el.disabled = true;
-            el.style.opacity = '0.7';
-            el.textContent = busyLabel || 'Working…';
-            return function restore() {
-                el.disabled = false;
-                el.style.opacity = '';
-                el.textContent = el.dataset.origLabel || orig;
-            };
-        }
+        tbody.innerHTML = filteredLogs.map(log => {
+            const ts = fmtTs(log.timestamp);
+            const badge = log.status === 'SUCCESS'
+                ? '<span class="badge badge-success">Success</span>'
+                : '<span class="badge badge-failure">Failure</span>';
+            return `<tr>
+                <td style="font-size:0.8rem; color:rgba(255,255,255,0.6); white-space:nowrap;">${ts}</td>
+                <td style="font-family:monospace; font-size:0.84rem; color:rgba(255,255,255,0.65);">${escapeHtml(log.ip||'')}</td>
+                <td style="font-weight:600;">${escapeHtml(log.user||'Unknown')}</td>
+                <td>${badge}</td>
+                <td style="font-size:0.83rem; color:rgba(255,255,255,0.6);">${escapeHtml(log.details||'—')}</td>
+            </tr>`;
+        }).join('');
 
-        // Log clearing functions
-        function openClearAll(btnId) {
-            const fields = `
-                <div style="color: rgba(0,0,0,0.75); margin-bottom:8px">This will permanently remove all log entries.</div>
-                <div style="font-size: 0.92em; color: rgba(0,0,0,0.6)">Are you sure?</div>
-            `;
-            showModal('Clear All Logs', fields, async () => {
-                await clearLogs('all', btnId);
+        if (cardEl) {
+            cardEl.innerHTML = filteredLogs.map(log => {
+                const ts = fmtTs(log.timestamp);
+                const badge = log.status === 'SUCCESS'
+                    ? '<span class="badge badge-success">Success</span>'
+                    : '<span class="badge badge-failure">Failure</span>';
+                return `<div class="glass mobile-card">
+                    <div class="mobile-card-hd">
+                        <strong style="color:#fff;">${escapeHtml(log.user||'Unknown')}</strong>
+                        ${badge}
+                    </div>
+                    <div class="mobile-card-body">
+                        <div class="mrow"><span class="mlabel">Time</span><span class="mvalue" style="font-size:0.78rem;">${ts}</span></div>
+                        <div class="mrow"><span class="mlabel">IP</span><span class="mvalue" style="font-family:monospace;">${escapeHtml(log.ip||'')}</span></div>
+                        <div class="mrow"><span class="mlabel">Details</span><span class="mvalue">${escapeHtml(log.details||'—')}</span></div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+    }
+
+    function fmtTs(ts) {
+        try { const d = new Date(ts); if (!isNaN(d)) return d.toLocaleString(); } catch(e) {}
+        return ts;
+    }
+
+    // ====== TABS ======
+    function switchTab(tab) {
+        document.getElementById('tabLogsBtn').classList.toggle('active', tab === 'logs');
+        document.getElementById('tabUsersBtn').classList.toggle('active', tab === 'users');
+        document.getElementById('logsTab').style.display  = tab === 'logs'  ? 'block' : 'none';
+        document.getElementById('usersTab').style.display = tab === 'users' ? 'block' : 'none';
+        if (tab === 'logs') loadLogs(); else loadUsers();
+    }
+
+    // ====== COMPACT ======
+    function toggleCompact(ev) {
+        const on = !!ev.target.checked;
+        document.getElementById('dashboard').classList.toggle('compact', on);
+        try { localStorage.setItem('admin_compact', on ? '1' : '0'); } catch(e) {}
+    }
+    function applyCompactFromStorage() {
+        let on = false;
+        try { on = localStorage.getItem('admin_compact') === '1'; } catch(e) {}
+        const cb = document.getElementById('compactToggle');
+        if (cb) cb.checked = on;
+        const dash = document.getElementById('dashboard');
+        if (dash) dash.classList.toggle('compact', on);
+    }
+
+    // ====== MODALS ======
+    function showModal(title, fieldsHtml, onSubmit) {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        const card = document.createElement('div');
+        card.className = 'glass modal-card';
+        card.innerHTML = `
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+                <h3 style="margin:0; color:#fff; font-size:1.05rem;">${title}</h3>
+                <button id="modalCloseBtn" class="btn btn-ghost btn-sm" style="padding:4px 9px;">✕</button>
+            </div>
+            <div class="modal-body">${fieldsHtml}</div>
+            <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:1.2rem;">
+                <button id="modalCancel" class="btn btn-ghost btn-sm">Cancel</button>
+                <button id="modalOk" class="btn btn-primary btn-sm">Confirm</button>
+            </div>
+        `;
+        overlay.appendChild(card);
+        document.body.appendChild(overlay);
+        const close = () => { try { document.body.removeChild(overlay); } catch(e) {} };
+        overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+        card.querySelector('#modalCloseBtn').addEventListener('click', close);
+        card.querySelector('#modalCancel').addEventListener('click', close);
+        card.querySelector('#modalOk').addEventListener('click', async () => {
+            try { await onSubmit(card); close(); } catch(e) {}
+        });
+        return card;
+    }
+
+    // ====== USER CRUD ======
+    function openAddUser() {
+        showModal('Add User', `
+            <label class="modal-field-label">Username</label>
+            <input id="um_username" class="modal-input" placeholder="letters, numbers, _-.">
+            <label class="modal-field-label">PIN (4–8 digits)</label>
+            <input id="um_pin" class="modal-input" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="e.g. 1234">
+        `, async card => {
+            const username = card.querySelector('#um_username').value.trim();
+            const pin = card.querySelector('#um_pin').value.trim();
+            if (!username) { alert('Username required'); throw new Error(); }
+            if (!/^[-_.A-Za-z0-9]{1,32}$/.test(username)) { alert('Invalid username'); throw new Error(); }
+            if (!/^\d{4,8}$/.test(pin)) { alert('PIN must be 4-8 digits'); throw new Error(); }
+            await addUser(username, pin);
+        });
+    }
+
+    async function addUser(username, pin) {
+        try {
+            const res = await fetch('/admin/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                cache: 'no-store',
+                body: JSON.stringify({ username, pin, active: true }),
             });
-        }
-
-        async function clearLogs(mode, btnId) {
-            try {
-                const restore = setButtonBusy(btnId, mode === 'all' ? 'Clearing…' : 'Removing…');
-                const res = await fetch('/admin/logs/clear', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'same-origin',
-                    cache: 'no-store',
-                    body: JSON.stringify({ mode })
-                });
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok) {
-                    showToast('Clear logs failed: ' + (data.error || res.status), 'error');
-                    if (typeof restore === 'function') restore();
-                    return;
-                }
-                const removed = data.removed ?? 0;
-                showToast((mode === 'all' ? 'All logs cleared' : `Removed ${removed} test entries`), 'success');
-                await loadLogs();
-                if (typeof restore === 'function') restore();
-            } catch (e) {
-                showToast('Clear logs failed', 'error');
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                showToast('Create failed: ' + (err.error || res.status), 'error'); return;
             }
-        }
+            showToast('User created', 'success');
+            await loadUsers();
+        } catch(e) { showToast('Create failed', 'error'); }
+    }
 
-        // Toast helper
-        function showToast(message, type = 'success', persistent = false) {
-            const container = document.getElementById('toast-container');
-            if (!container) return;
-            const t = document.createElement('div');
-            t.className = 'toast ' + type;
-            t.textContent = message;
-            container.appendChild(t);
-            setTimeout(() => t.classList.add('show'), 10);
-            if (!persistent) {
-                setTimeout(() => {
-                    t.classList.remove('show');
-                    setTimeout(() => t.remove(), 500);
-                }, 3500);
+    function openEditUser(username) {
+        showModal('Edit User', `
+            <div style="color:rgba(255,255,255,0.55); margin-bottom:8px; font-size:0.88rem;">
+                Update PIN for <strong style="color:#fff;">${escapeHtml(username)}</strong>
+            </div>
+            <label class="modal-field-label">New PIN (optional)</label>
+            <input id="um_newpin" class="modal-input" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="leave blank to keep current">
+        `, async card => {
+            const pin = card.querySelector('#um_newpin').value.trim();
+            if (pin && !/^\d{4,8}$/.test(pin)) { showToast('PIN must be 4-8 digits', 'error'); throw new Error(); }
+            await editUser(username, pin || undefined);
+        });
+    }
+
+    async function editUser(username, pin) {
+        try {
+            const body = {};
+            if (pin !== undefined) body.pin = pin;
+            const res = await fetch('/admin/users/' + encodeURIComponent(username), {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                cache: 'no-store',
+                body: JSON.stringify(body),
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                showToast('Update failed: ' + (err.error || res.status), 'error'); return;
             }
-        }
-    </script>
-    <div id="toast-container"></div>
+            showToast('User updated', 'success');
+            await loadUsers();
+        } catch(e) { showToast('Update failed', 'error'); }
+    }
+
+    async function toggleActive(username, active) {
+        try {
+            const res = await fetch('/admin/users/' + encodeURIComponent(username), {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                cache: 'no-store',
+                body: JSON.stringify({ active }),
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                showToast('Toggle failed: ' + (err.error || res.status), 'error'); return;
+            }
+            showToast('User ' + (active ? 'activated' : 'deactivated'), 'success');
+            await loadUsers();
+        } catch(e) { showToast('Toggle failed', 'error'); }
+    }
+
+    async function deleteUser(username) {
+        if (!confirm('Delete user ' + username + '?')) return;
+        try {
+            const res = await fetch('/admin/users/' + encodeURIComponent(username), {
+                method: 'DELETE',
+                credentials: 'same-origin',
+                cache: 'no-store',
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                showToast('Delete failed: ' + (err.error || res.status), 'error'); return;
+            }
+            showToast('User deleted', 'success');
+            await loadUsers();
+        } catch(e) { showToast('Delete failed', 'error'); }
+    }
+
+    function openMigrateAll(btnId) {
+        showModal('Migrate All Users', `
+            <div style="color:rgba(255,255,255,0.65); margin-bottom:8px; font-size:0.9rem;">
+                This will migrate all users from <code style="color:#ffd740;">config.ini</code> [pins] to the JSON user store using their existing PINs.
+            </div>
+            <div style="font-size:0.85rem; color:rgba(255,82,82,0.8);">This action cannot be undone.</div>
+        `, async () => { await migrateAll(btnId); });
+    }
+
+    async function migrateAll(btnId) {
+        try {
+            const restore = setButtonBusy(btnId, 'Migrating…');
+            const res = await fetch('/admin/users/migrate-all', {
+                method: 'POST', credentials: 'same-origin', cache: 'no-store'
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok || res.status === 207) {
+                const migrated = data.migrated || 0;
+                const failed = (data.failed || []).length;
+                showToast(`Migrated ${migrated} user(s)` + (failed ? `, ${failed} failed` : ''), failed ? 'error' : 'success');
+                await loadUsers();
+            } else {
+                showToast('Migrate-all failed: ' + (data.error || res.status), 'error');
+            }
+            if (typeof restore === 'function') restore();
+        } catch(e) { showToast('Migrate-all failed', 'error'); }
+    }
+
+    function openClearAll(btnId) {
+        showModal('Clear All Logs', `
+            <div style="color:rgba(255,255,255,0.65); margin-bottom:8px; font-size:0.9rem;">
+                This will permanently remove all log entries.
+            </div>
+            <div style="font-size:0.85rem; color:rgba(255,82,82,0.8);">This action cannot be undone.</div>
+        `, async () => { await clearLogs('all', btnId); });
+    }
+
+    async function clearLogs(mode, btnId) {
+        try {
+            const restore = setButtonBusy(btnId, 'Clearing…');
+            const res = await fetch('/admin/logs/clear', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                cache: 'no-store',
+                body: JSON.stringify({ mode })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                showToast('Clear logs failed: ' + (data.error || res.status), 'error');
+                if (typeof restore === 'function') restore(); return;
+            }
+            showToast('All logs cleared', 'success');
+            await loadLogs();
+            if (typeof restore === 'function') restore();
+        } catch(e) { showToast('Clear logs failed', 'error'); }
+    }
+
+    // ====== HELPERS ======
+    function escapeHtml(str) {
+        if (str == null) return '';
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function setButtonBusy(id, label) {
+        if (!id) return null;
+        const el = document.getElementById(id);
+        if (!el) return null;
+        const orig = el.dataset.origLabel || el.textContent;
+        el.dataset.origLabel = orig;
+        el.disabled = true;
+        el.style.opacity = '0.6';
+        el.textContent = label || 'Working…';
+        return () => { el.disabled = false; el.style.opacity = ''; el.textContent = el.dataset.origLabel || orig; };
+    }
+
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+        const t = document.createElement('div');
+        t.className = 'toast ' + type;
+        t.textContent = message;
+        container.appendChild(t);
+        setTimeout(() => t.classList.add('show'), 10);
+        setTimeout(() => {
+            t.classList.remove('show');
+            setTimeout(() => t.remove(), 380);
+        }, 3500);
+    }
+</script>
 </body>
 </html>
