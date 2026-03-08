@@ -530,7 +530,7 @@
 
         <!-- Leaderboard -->
         <div class="glass leaderboard" id="leaderboardSection" style="display:none;">
-            <div class="section-title">🏆 Top Users — Successful Entries</div>
+            <div class="section-title">🏆 Top Users — Times Used</div>
             <div id="leaderboardRows"></div>
         </div>
 
@@ -638,6 +638,7 @@
 
 <script>
     let allLogs = [];
+    let allUsers = [];
     let filteredLogs = [];
     let isAuthenticated = false;
 
@@ -751,30 +752,26 @@
         document.getElementById('statFailed').textContent = failed;
         document.getElementById('statRate').textContent = rate + '%';
 
-        // Build leaderboard from SUCCESS events only
-        const counts = {};
-        const totals = {};
-        allLogs.forEach(l => {
-            const u = l.user || 'Unknown';
-            totals[u] = (totals[u] || 0) + 1;
-            if (l.status === 'SUCCESS') counts[u] = (counts[u] || 0) + 1;
-        });
+        updateLeaderboard();
+    }
 
-        const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8);
-        const maxCount = sorted.length ? sorted[0][1] : 1;
+    function updateLeaderboard() {
+        // Build from user store times_used — consistent with the Users table
+        const active = allUsers.filter(u => (u.times_used || 0) > 0);
+        const sorted = [...active].sort((a, b) => (b.times_used || 0) - (a.times_used || 0)).slice(0, 8);
+        const maxCount = sorted.length ? sorted[0].times_used : 1;
 
         if (sorted.length) {
             document.getElementById('leaderboardSection').style.display = 'block';
-            document.getElementById('leaderboardRows').innerHTML = sorted.map(([name, cnt], i) => {
+            document.getElementById('leaderboardRows').innerHTML = sorted.map((u, i) => {
                 const rankCls = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-n';
+                const cnt = u.times_used || 0;
                 const pct = Math.round(cnt / maxCount * 100);
-                const sr = totals[name] > 0 ? Math.round(cnt / totals[name] * 100) : 0;
                 return `<div class="lb-row">
                     <div class="rank ${rankCls}">${i + 1}</div>
-                    <div class="lb-name">${escapeHtml(name)}</div>
+                    <div class="lb-name">${escapeHtml(u.username)}</div>
                     <div class="lb-bar-wrap"><div class="lb-bar" style="width:${pct}%"></div></div>
                     <div class="lb-count">${cnt}</div>
-                    <div class="lb-rate">${sr}%</div>
                 </div>`;
             }).join('');
         } else {
@@ -787,7 +784,9 @@
         try {
             const res = await fetch('/admin/users', { credentials: 'same-origin', cache: 'no-store' });
             const data = await res.json();
-            renderUsers(data.users || []);
+            allUsers = data.users || [];
+            renderUsers(allUsers);
+            updateLeaderboard();
         } catch (e) {
             const tbody = document.getElementById('usersTableBody');
             if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="no-data">Error loading users</td></tr>';
