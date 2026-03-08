@@ -1,5 +1,6 @@
 /* DoorOpener Service Worker */
-const CACHE_NAME = 'dooropener-cache-v1';
+const CACHE_VERSION = 'v2'; // bump on every deploy to bust stale caches
+const CACHE_NAME = `dooropener-cache-${CACHE_VERSION}`;
 const ASSETS = [
   '/',
   '/static/background.jpg',
