@@ -1621,6 +1621,8 @@ def admin_users_migrate_all():
     """
     if not _require_admin_authenticated():
         return jsonify({"error": "Authentication required"}), 401
+    if not _check_admin_csrf():
+        return jsonify({"error": "Invalid CSRF token"}), 403
     if not user_pins:
         return jsonify({"migrated": 0, "failed": []}), 200
 
