@@ -54,6 +54,11 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            text-align: center;
+            padding: 2.5rem;
+            max-width: 90%;
+            width: 420px;
+            margin: auto;
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.2));
             box-shadow:
                 0 8px 32px 0 rgba(31, 38, 135, 0.2),
@@ -121,26 +126,18 @@
                 font-size: 20px;
                 min-width: 200px;
                 height: 56px;
-                padding: 0 40px;
+                padding: 15px 30px;
             }
 
             #battery-container {
-                bottom: 20px !important;
-                right: 80px !important;
-                padding: 8px 12px !important;
+                bottom: 20px;
+                right: 80px;
+                padding: 8px 12px;
             }
 
-            #battery-container span {
-                font-size: 0.75rem !important;
+            #battery-level {
+                font-size: 0.75rem;
             }
-        }
-
-        .container {
-            text-align: center;
-            padding: 2.5rem;
-            max-width: 90%;
-            width: 420px;
-            margin: auto;
         }
 
         h1 {
@@ -202,13 +199,6 @@
         .error {
             background-color: #f2dede;
             color: #a94442;
-        }
-
-        @media (max-width: 480px) {
-            .door-button {
-                padding: 15px 30px;
-                font-size: 20px;
-            }
         }
 
         .door-button.error-btn {
@@ -464,30 +454,206 @@
                 transform: translateY(0) scale(1);
             }
         }
+
+        /* Access popups */
+        .access-popup {
+            display: none;
+            position: absolute;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.95);
+            font-family: 'Courier New', monospace;
+            font-size: 2rem;
+            padding: 18px 36px;
+            border-radius: 14px;
+            letter-spacing: 2px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.35s, top 0.35s;
+        }
+
+        .access-popup.denied {
+            color: #ff0000;
+            border: 2px solid #ff0000;
+            box-shadow: 0 8px 32px 0 rgba(255, 0, 0, 0.18), 0 2px 16px 0 rgba(0, 0, 0, 0.3);
+            text-shadow: 0 0 8px #ff0000, 0 0 2px #ff0000;
+        }
+
+        .access-popup.granted {
+            color: #00ff88;
+            border: 2px solid #00ff88;
+            box-shadow: 0 8px 32px 0 rgba(0, 255, 136, 0.18), 0 2px 16px 0 rgba(0, 0, 0, 0.3);
+            text-shadow: 0 0 8px #00ff88, 0 0 2px #00ff88;
+        }
+
+        /* PIN display */
+        #pinDisplay {
+            width: 280px;
+            margin: 0 auto 1.5rem;
+            padding: 14px 18px;
+            font-size: 24px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            color: rgba(0, 0, 0, 0.8);
+            font-weight: 600;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            min-height: 28px;
+            letter-spacing: 8px;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Keypad grid */
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 0 auto 1.5rem;
+            width: 280px;
+        }
+
+        /* OIDC buttons */
+        .sso-row {
+            width: 280px;
+            margin: 0 auto 0.5rem;
+            text-align: center;
+        }
+
+        #ssoLoginBtn {
+            display: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #1976d2, #1565c0);
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        #ssoOpenBtn {
+            display: none;
+            margin-left: 8px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: #fff;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        #ssoLogoutBtn {
+            display: none;
+            margin-left: 8px;
+            margin-top: 1rem;
+            padding: 10px 16px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #e53935, #d32f2f);
+            color: #fff;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Battery widget */
+        #battery-container {
+            position: fixed;
+            bottom: 20px;
+            right: 80px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 50px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        #battery-icon {
+            width: 20px;
+            height: 10px;
+            border: 1px solid rgba(0, 0, 0, 0.5);
+            border-radius: 1px;
+            position: relative;
+            background: transparent;
+            overflow: hidden;
+        }
+
+        #battery-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 1px;
+            background: linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%);
+            transition: width 0.4s, background 0.4s;
+        }
+
+        .battery-nub {
+            position: absolute;
+            right: -3px;
+            top: 1px;
+            width: 1.5px;
+            height: 6px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 0 1px 1px 0;
+        }
+
+        #battery-level {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: rgba(0, 0, 0, 0.7);
+        }
+
+        /* GitHub button */
+        .github-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 50%;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: rgba(0, 0, 0, 0.7);
+            text-decoration: none;
+            transition: background 0.2s ease, transform 0.2s ease;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .github-btn:hover,
+        .github-btn:focus {
+            background: rgba(255, 255, 255, 0.35);
+            transform: scale(1.05);
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
         <!-- Matrix-style ACCESS DENIED popup -->
-        <div id="accessDeniedPopup"
-            style="display:none; position:absolute; top:-60px; left:50%; transform:translateX(-50%); z-index:10; background:rgba(0,0,0,0.95); color:#ff0000; font-family:'Courier New',monospace; font-size:2rem; padding:18px 36px; border-radius:14px; box-shadow:0 8px 32px 0 rgba(255, 0, 0, 0.18),0 2px 16px 0 rgba(0,0,0,0.3); border:2px solid #ff0000; letter-spacing:2px; text-shadow:0 0 8px #ff0000,0 0 2px #ff0000; pointer-events:none; opacity:0; transition:opacity 0.35s, top 0.35s;">
-            ACCESS DENIED
-        </div>
+        <div id="accessDeniedPopup" class="access-popup denied">ACCESS DENIED</div>
         <!-- Matrix-style ACCESS GRANTED popup -->
-        <div id="accessGrantedPopup"
-            style="display:none; position:absolute; top:-60px; left:50%; transform:translateX(-50%); z-index:10; background:rgba(0,0,0,0.95); color:#00ff88; font-family:'Courier New',monospace; font-size:2rem; padding:18px 36px; border-radius:14px; box-shadow:0 8px 32px 0 rgba(0, 255, 136, 0.18),0 2px 16px 0 rgba(0,0,0,0.3); border:2px solid #00ff88; letter-spacing:2px; text-shadow:0 0 8px #00ff88,0 0 2px #00ff88; pointer-events:none; opacity:0; transition:opacity 0.35s, top 0.35s;">
-            ACCESS GRANTED
-        </div>
+        <div id="accessGrantedPopup" class="access-popup granted">ACCESS GRANTED</div>
         <!-- PIN Display -->
-        <div id="pinDisplay"
-            style="width: 280px; margin: 0 auto 1.5rem auto; padding: 14px 18px; font-size: 24px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.4); background: rgba(255,255,255,0.3); backdrop-filter: blur(10px); color: rgba(0,0,0,0.8); font-weight: 600; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); text-align: center; min-height: 28px; letter-spacing: 8px; font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center;">
-            Enter PIN
+        <div id="pinDisplay">
+            <span style="color: rgba(0,0,0,0.4);">Enter PIN</span>
         </div>
 
         <!-- Keypad -->
-        <div class="keypad"
-            style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 1.5rem; width: 280px; margin-left: auto; margin-right: auto;">
+        <div class="keypad">
             <button class="keypad-btn" onclick="addDigit('1')">1</button>
             <button class="keypad-btn" onclick="addDigit('2')">2</button>
             <button class="keypad-btn" onclick="addDigit('3')">3</button>
@@ -503,46 +669,29 @@
         </div>
 
         {% if oidc_enabled %}
-        <div style="width: 280px; margin: 0 auto 0.5rem auto; text-align:center;">
-            <a href="/login" id="ssoLoginBtn"
-                style="display:inline-block; padding:10px 16px; border-radius:8px; background: linear-gradient(135deg, #1976d2, #1565c0); color:#fff; text-decoration:none; font-weight:600;">Login
-                with SSO</a>
-            <button id="ssoOpenBtn" onclick="openDoorWithSSO()"
-                style="display:none; margin-left:8px; padding:10px 16px; border-radius:8px; background: linear-gradient(135deg, #4CAF50, #45a049); color:#fff; border:none; font-weight:600;">Open
-                with SSO</button>
+        <div class="sso-row">
+            <a href="/login" id="ssoLoginBtn">Login with SSO</a>
+            <button id="ssoOpenBtn" onclick="openDoorWithSSO()">Open with SSO</button>
         </div>
         {% endif %}
 
         <!-- Logout button for OIDC -->
-        <button onclick="window.location.href='/oidc/logout'" id="ssoLogoutBtn"
-            style="display:none; margin-left:8px; padding: 10px 16px; border-radius: 8px; background: linear-gradient(135deg, #e53935, #d32f2f); color: #fff; font-weight: 600; text-align: center; margin-top: 1rem; border: none; cursor: pointer;">
-            Logout
-        </button>
+        <button onclick="window.location.href='/oidc/logout'" id="ssoLogoutBtn">Logout</button>
 
     </div>
     <div id="toast-container"></div>
 
     <!-- Battery icon positioned next to admin icon -->
-    <div id="battery-container"
-        style="position: fixed; bottom: 20px; right: 80px; display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: rgba(255,255,255,0.25); border-radius: 50px; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.3); z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-        <div id="battery-icon"
-            style="width: 20px; height: 10px; border: 1px solid rgba(0,0,0,0.5); border-radius: 1px; position: relative; background: transparent; overflow: hidden;">
-            <div id="battery-fill"
-                style="height: 100%; width: 0%; border-radius: 1px; background: linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%); transition: width 0.4s, background 0.4s;">
-            </div>
-            <div
-                style="position: absolute; right: -3px; top: 1px; width: 1.5px; height: 6px; background: rgba(0,0,0,0.5); border-radius: 0 1px 1px 0;">
-            </div>
+    <div id="battery-container">
+        <div id="battery-icon">
+            <div id="battery-fill"></div>
+            <div class="battery-nub"></div>
         </div>
-        <span id="battery-level" style="font-size: 0.8rem; font-weight: 600; color: rgba(0,0,0,0.7);">--</span>
+        <span id="battery-level">--</span>
     </div>
 
     <!-- GitHub button -->
-    <a href="https://github.com/Sloth-on-meth/DoorOpener" target="_blank"
-        style="position: fixed; bottom: 20px; left: 20px; display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: rgba(255,255,255,0.25); border-radius: 50%; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.3); color: rgba(0,0,0,0.7); text-decoration: none; transition: all 0.2s ease; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"
-        title="View on GitHub"
-        onmouseover="this.style.background='rgba(255,255,255,0.35)'; this.style.transform='scale(1.05)'"
-        onmouseout="this.style.background='rgba(255,255,255,0.25)'; this.style.transform='scale(1)'">
+    <a href="https://github.com/Sloth-on-meth/DoorOpener" target="_blank" class="github-btn" title="View on GitHub">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path
                 d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
@@ -755,6 +904,12 @@
             }
         }
 
+        function setKeypadDisabled(disabled) {
+            document.querySelectorAll('.keypad-btn').forEach(btn => {
+                btn.disabled = disabled;
+            });
+        }
+
         function startBlockCountdown(blockedUntilEpoch) {
             try {
                 const container = document.getElementById('toast-container');
@@ -765,9 +920,9 @@
                     el.id = 'block-toast';
                     el.className = 'toast error';
                     container.appendChild(el);
-                    // Animate in
                     setTimeout(() => el.classList.add('show'), 10);
                 }
+                setKeypadDisabled(true);
                 const update = () => {
                     const now = Date.now() / 1000;
                     const remaining = Math.max(0, Math.ceil(blockedUntilEpoch - now));
@@ -779,6 +934,7 @@
                         blockCountdownTimer = null;
                         el.classList.remove('show');
                         setTimeout(() => el.remove(), 500);
+                        setKeypadDisabled(false);
                     }
                 };
                 if (blockCountdownTimer) clearInterval(blockCountdownTimer);
