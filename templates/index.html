@@ -1177,7 +1177,7 @@
                         showStatus('Error: ' + data.message, 'error');
 
                         // Change button to red cross on failure
-                        const submitBtn = document.getElementById('submitBtn');
+                        submitBtn.classList.remove('submitting');
                         submitBtn.style.background = 'linear-gradient(135deg, #dc3545, #c82333)';
                         submitBtn.textContent = '✗';
 
