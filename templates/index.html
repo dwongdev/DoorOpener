@@ -935,11 +935,13 @@
                 updatePinDisplay();
 
                 // Easter egg
+                {% if easter_egg_enabled %}
                 if (currentPin === '6767') {
                     if (autoSubmitTimer) { clearTimeout(autoSubmitTimer); autoSubmitTimer = null; }
                     triggerEasterEgg();
                     return;
                 }
+                {% endif %}
 
                 // Haptic feedback
                 if (window.navigator.vibrate) {

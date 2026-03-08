@@ -394,10 +394,12 @@ def after_request(response):
 
 @app.route("/")
 def index():
+    easter_egg_enabled = config.getboolean("server", "67mode", fallback=False)
     return render_template(
         "index.html",
         oidc_enabled=bool(oauth),
         require_pin_for_oidc=require_pin_for_oidc,
+        easter_egg_enabled=easter_egg_enabled,
     )
 
 
