@@ -1144,11 +1144,20 @@
         } catch(e) { showToast('Toggle failed', 'error'); }
     }
 
-    async function deleteUser(username) {
-        if (!confirm('Delete user ' + username + '?')) return;
+    function deleteUser(username) {
+        showModal(`Delete user "${escapeHtml(username)}"`, `
+            <div style="color:rgba(255,255,255,0.65); font-size:0.9rem; margin-bottom:8px;">
+                Permanently delete <strong style="color:#fff;">${escapeHtml(username)}</strong> and all their access data.
+            </div>
+            <div style="font-size:0.85rem; color:rgba(255,82,82,0.8);">This action cannot be undone.</div>
+        `, async () => { await _doDeleteUser(username); });
+    }
+
+    async function _doDeleteUser(username) {
         try {
             const res = await fetch('/admin/users/' + encodeURIComponent(username), {
                 method: 'DELETE',
+                headers: { 'X-CSRF-Token': csrfToken },
                 credentials: 'same-origin',
                 cache: 'no-store',
             });
