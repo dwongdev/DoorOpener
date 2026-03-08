@@ -201,11 +201,11 @@ def test_admin_users_create_invalid_data(mock_users_store):
     _admin_session(c)
 
     # Missing username
-    response = c.post("/admin/users", json={"pin": "1234", "active": True})
+    response = c.post("/admin/users", json={"pin": "1234", "active": True}, headers=_csrf_headers())
     assert response.status_code == 400
 
     # Invalid PIN (too short)
-    response = c.post("/admin/users", json={"username": "test", "pin": "12", "active": True})
+    response = c.post("/admin/users", json={"username": "test", "pin": "12", "active": True}, headers=_csrf_headers())
     assert response.status_code == 400
 
 
@@ -216,7 +216,7 @@ def test_admin_users_update(mock_users_store):
     c = client_app()
     _admin_session(c)
 
-    response = c.put("/admin/users/testuser", json={"pin": "5678", "active": False})
+    response = c.put("/admin/users/testuser", json={"pin": "5678", "active": False}, headers=_csrf_headers())
     assert response.status_code == 200
 
     data = response.get_json()
@@ -233,7 +233,7 @@ def test_admin_users_update_nonexistent(mock_users_store):
     c = client_app()
     _admin_session(c)
 
-    response = c.put("/admin/users/nonexistent", json={"pin": "1234", "active": True})
+    response = c.put("/admin/users/nonexistent", json={"pin": "1234", "active": True}, headers=_csrf_headers())
     assert response.status_code == 404
 
     data = response.get_json()
@@ -247,7 +247,7 @@ def test_admin_users_delete(mock_users_store):
     c = client_app()
     _admin_session(c)
 
-    response = c.delete("/admin/users/testuser")
+    response = c.delete("/admin/users/testuser", headers=_csrf_headers())
     assert response.status_code == 200
 
     data = response.get_json()
@@ -263,7 +263,7 @@ def test_admin_users_delete_nonexistent(mock_users_store):
     c = client_app()
     _admin_session(c)
 
-    response = c.delete("/admin/users/nonexistent")
+    response = c.delete("/admin/users/nonexistent", headers=_csrf_headers())
     assert response.status_code == 404
 
     data = response.get_json()
@@ -289,7 +289,7 @@ def test_admin_users_migrate_single(mock_users_store, monkeypatch):
         c = client_app()
         _admin_session(c)
 
-        response = c.post("/admin/users/configuser/migrate")
+        response = c.post("/admin/users/configuser/migrate", headers=_csrf_headers())
         assert response.status_code == 200
 
         data = response.get_json()
@@ -322,7 +322,7 @@ def test_admin_users_migrate_all(mock_users_store, monkeypatch):
         c = client_app()
         _admin_session(c)
 
-        response = c.post("/admin/users/migrate-all")
+        response = c.post("/admin/users/migrate-all", headers=_csrf_headers())
         assert response.status_code == 200
 
         data = response.get_json()
@@ -346,7 +346,7 @@ def test_admin_users_migrate_all_no_config_users(mock_users_store, monkeypatch):
     c = client_app()
     _admin_session(c)
 
-    response = c.post("/admin/users/migrate-all")
+    response = c.post("/admin/users/migrate-all", headers=_csrf_headers())
     assert response.status_code == 200
 
     data = response.get_json()
@@ -420,6 +420,29 @@ def test_times_used_counter_integration(mock_users_store, monkeypatch):
         user = users[0]
         assert user["times_used"] == 1
         assert user["last_used_at"] is not None
+
+
+def test_admin_csrf_required_for_mutating_endpoints(mock_users_store, monkeypatch):
+    """Test that mutating admin endpoints reject requests without a valid CSRF token."""
+    import app as app_module
+
+    monkeypatch.setattr(app_module, "user_pins", {})
+    mock_users_store.create_user("target", "1234")
+
+    c = client_app()
+    _admin_session(c)
+
+    # Missing token
+    assert c.post("/admin/users", json={"username": "x", "pin": "1234"}).status_code == 403
+    assert c.put("/admin/users/target", json={"active": False}).status_code == 403
+    assert c.delete("/admin/users/target").status_code == 403
+    assert c.post("/admin/logs/clear", json={"mode": "all"}).status_code == 403
+    assert c.post("/admin/users/migrate-all").status_code == 403
+
+    # Wrong token
+    bad = {"X-CSRF-Token": "totally-wrong"}
+    assert c.post("/admin/users", json={"username": "x", "pin": "1234"}, headers=bad).status_code == 403
+    assert c.delete("/admin/users/target", headers=bad).status_code == 403
 
 
 def test_user_management_ui_data_structure(mock_users_store):

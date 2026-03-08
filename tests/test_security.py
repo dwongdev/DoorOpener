@@ -112,11 +112,13 @@ def test_admin_auth_success(client, app_module, monkeypatch):
         headers=_std_headers(),
     )
     assert r.status_code == 200
-    # Verify auth flag via check-auth
+    # Verify auth flag and CSRF token are returned via check-auth
     r2 = client.get("/admin/check-auth")
     assert r2.status_code == 200
     data = r2.get_json()
     assert data.get("authenticated") is True
+    assert data.get("csrf_token") is not None
+    assert len(data["csrf_token"]) == 64  # secrets.token_hex(32) produces 64 hex chars
 
 
 def test_testmode_pin_success(client, app_module):
@@ -134,16 +136,27 @@ def test_testmode_pin_success(client, app_module):
 
 
 def test_admin_logout_endpoint(client):
-    # Authenticate first
+    # Authenticate first, including CSRF token
+    csrf = "test-logout-csrf-token"
     with client.session_transaction() as s:
         s["admin_authenticated"] = True
         s["admin_login_time"] = datetime.now(timezone.utc).isoformat()
-    r = client.post("/admin/logout")
+        s["admin_csrf_token"] = csrf
+    r = client.post("/admin/logout", headers={"X-CSRF-Token": csrf})
     assert r.status_code == 200
     # Confirm logged out
     r2 = client.get("/admin/check-auth")
     assert r2.status_code == 200
     assert r2.get_json().get("authenticated") is False
+
+
+def test_admin_logout_requires_csrf(client):
+    # Logout without CSRF token must be rejected
+    with client.session_transaction() as s:
+        s["admin_authenticated"] = True
+        s["admin_csrf_token"] = "secret"
+    r = client.post("/admin/logout")
+    assert r.status_code == 403
 
 
 def test_oidc_logout_enabled_redirect(client, app_module, monkeypatch):

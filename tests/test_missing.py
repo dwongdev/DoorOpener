@@ -15,10 +15,18 @@ def client_app():
     return flask_app.test_client()
 
 
+_CSRF_TOKEN = "test-csrf-missing-12345"
+
+
 def _admin_session(client):
     with client.session_transaction() as s:
         s["admin_authenticated"] = True
         s["admin_login_time"] = datetime.now(timezone.utc).isoformat()
+        s["admin_csrf_token"] = _CSRF_TOKEN
+
+
+def _csrf():
+    return {"X-CSRF-Token": _CSRF_TOKEN}
 
 
 def _std_headers():
@@ -65,7 +73,7 @@ def test_logs_clear_unauthenticated():
 def test_logs_clear_invalid_mode():
     c = client_app()
     _admin_session(c)
-    r = c.post("/admin/logs/clear", json={"mode": "invalid"})
+    r = c.post("/admin/logs/clear", json={"mode": "invalid"}, headers=_csrf())
     assert r.status_code == 400
 
 
@@ -80,7 +88,7 @@ def test_logs_clear_all(tmp_path):
     try:
         c = client_app()
         _admin_session(c)
-        r = c.post("/admin/logs/clear", json={"mode": "all"})
+        r = c.post("/admin/logs/clear", json={"mode": "all"}, headers=_csrf())
         assert r.status_code == 200
         assert r.get_json()["mode"] == "all"
         assert log_file.read_text() == ""
@@ -110,7 +118,7 @@ def test_logs_clear_test_only(tmp_path):
     try:
         c = client_app()
         _admin_session(c)
-        r = c.post("/admin/logs/clear", json={"mode": "test_only"})
+        r = c.post("/admin/logs/clear", json={"mode": "test_only"}, headers=_csrf())
         assert r.status_code == 200
         data = r.get_json()
         assert data["removed"] == 1
@@ -131,7 +139,7 @@ def test_logs_clear_all_missing_file():
     try:
         c = client_app()
         _admin_session(c)
-        r = c.post("/admin/logs/clear", json={"mode": "all"})
+        r = c.post("/admin/logs/clear", json={"mode": "all"}, headers=_csrf())
         assert r.status_code == 200
     finally:
         app_module.log_path = original
