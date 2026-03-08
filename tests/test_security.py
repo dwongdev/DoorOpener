@@ -1,7 +1,8 @@
 import json
 import time
 from datetime import datetime, timedelta, timezone
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 import pytest
 
 
@@ -55,9 +56,7 @@ def test_suspicious_request_blocked_open_door(client):
 def test_global_rate_limit_blocks(client, app_module):
     # Force global rate limit exceeded
     app_module.global_failed_attempts = app_module.MAX_GLOBAL_ATTEMPTS_PER_HOUR
-    resp = client.post(
-        "/open-door", data=json.dumps({"pin": "1234"}), headers=_std_headers()
-    )
+    resp = client.post("/open-door", data=json.dumps({"pin": "1234"}), headers=_std_headers())
     assert resp.status_code == 429
 
 
@@ -71,12 +70,8 @@ def test_open_door_session_blocked_flow(client, app_module, monkeypatch):
     app_module.global_failed_attempts = 0
     app_module.global_last_reset = app_module.get_current_time()
     # Block this session
-    app_module.session_blocked_until[sid] = app_module.get_current_time() + timedelta(
-        seconds=60
-    )
-    r = client.post(
-        "/open-door", data=json.dumps({"pin": "1234"}), headers=_std_headers()
-    )
+    app_module.session_blocked_until[sid] = app_module.get_current_time() + timedelta(seconds=60)
+    r = client.post("/open-door", data=json.dumps({"pin": "1234"}), headers=_std_headers())
     assert r.status_code == 429
     data = r.get_json()
     assert "blocked_until" in data
@@ -86,15 +81,9 @@ def test_open_door_session_blocked_flow(client, app_module, monkeypatch):
 
 def test_open_door_ip_blocked_flow(client, app_module, monkeypatch):
     # Force known identifiers from helper
-    monkeypatch.setattr(
-        app_module, "get_client_identifier", lambda: ("9.9.9.9", "sessX", "idkeyX")
-    )
-    app_module.ip_blocked_until["idkeyX"] = app_module.get_current_time() + timedelta(
-        seconds=60
-    )
-    r = client.post(
-        "/open-door", data=json.dumps({"pin": "1234"}), headers=_std_headers()
-    )
+    monkeypatch.setattr(app_module, "get_client_identifier", lambda: ("9.9.9.9", "sessX", "idkeyX"))
+    app_module.ip_blocked_until["idkeyX"] = app_module.get_current_time() + timedelta(seconds=60)
+    r = client.post("/open-door", data=json.dumps({"pin": "1234"}), headers=_std_headers())
     assert r.status_code == 429
 
 
@@ -139,9 +128,7 @@ def test_testmode_pin_success(client, app_module):
 
     app_module.user_pins["alice"] = "1234"
     app_module.test_mode = True
-    r = client.post(
-        "/open-door", data=json.dumps({"pin": "1234"}), headers=_std_headers()
-    )
+    r = client.post("/open-door", data=json.dumps({"pin": "1234"}), headers=_std_headers())
     assert r.status_code == 200
     assert "TEST MODE" in r.get_json().get("message", "")
 
@@ -169,15 +156,11 @@ def test_oidc_logout_enabled_redirect(client, app_module, monkeypatch):
 
     mock_resp = MagicMock()
     mock_resp.status_code = 200
-    mock_resp.json.return_value = {
-        "end_session_endpoint": "https://auth.example.com/logout"
-    }
+    mock_resp.json.return_value = {"end_session_endpoint": "https://auth.example.com/logout"}
     with patch("requests.get", return_value=mock_resp):
         r = client.get("/oidc/logout", follow_redirects=False)
         assert r.status_code in (302, 303)
-        assert r.headers.get("Location", "").startswith(
-            "https://auth.example.com/logout"
-        )
+        assert r.headers.get("Location", "").startswith("https://auth.example.com/logout")
 
 
 def test_admin_page_renders(client):
@@ -238,9 +221,7 @@ def test_open_door_success_switch(client, app_module, monkeypatch):
     mock_resp.raise_for_status = lambda: None
 
     with patch("requests.post", return_value=mock_resp):
-        r = client.post(
-            "/open-door", data=json.dumps({"pin": "1234"}), headers=_std_headers()
-        )
+        r = client.post("/open-door", data=json.dumps({"pin": "1234"}), headers=_std_headers())
         assert r.status_code == 200
         msg = r.get_json().get("message", "")
         assert "Door open" in msg
@@ -255,9 +236,7 @@ def test_open_door_success_lock(client, app_module, monkeypatch):
     mock_resp.raise_for_status = lambda: None
 
     with patch("requests.post", return_value=mock_resp):
-        r = client.post(
-            "/open-door", data=json.dumps({"pin": "1234"}), headers=_std_headers()
-        )
+        r = client.post("/open-door", data=json.dumps({"pin": "1234"}), headers=_std_headers())
         assert r.status_code == 200
 
 
@@ -270,9 +249,7 @@ def test_open_door_success_input_boolean(client, app_module, monkeypatch):
     mock_resp.raise_for_status = lambda: None
 
     with patch("requests.post", return_value=mock_resp):
-        r = client.post(
-            "/open-door", data=json.dumps({"pin": "1234"}), headers=_std_headers()
-        )
+        r = client.post("/open-door", data=json.dumps({"pin": "1234"}), headers=_std_headers())
         assert r.status_code == 200
 
 
@@ -317,9 +294,7 @@ def test_admin_logs_parsing(client, app_module, tmp_path):
         assert any(row.get("user") == "alice" for row in data["logs"])
 
 
-def test_blocked_denies_correct_pin_and_returns_blocked_until(
-    client, app_module, monkeypatch
-):
+def test_blocked_denies_correct_pin_and_returns_blocked_until(client, app_module, monkeypatch):
     # Ensure a valid PIN exists
     app_module.user_pins["alice"] = "1234"
     # Trigger session id creation
@@ -328,22 +303,16 @@ def test_blocked_denies_correct_pin_and_returns_blocked_until(
         sid = s.get("_session_id")
     assert sid
     # Put the session into a blocked state for ~60s
-    app_module.session_blocked_until[sid] = app_module.get_current_time() + timedelta(
-        seconds=60
-    )
+    app_module.session_blocked_until[sid] = app_module.get_current_time() + timedelta(seconds=60)
     # Attempt with correct PIN must still be blocked
-    r = client.post(
-        "/open-door", data=json.dumps({"pin": "1234"}), headers=_std_headers()
-    )
+    r = client.post("/open-door", data=json.dumps({"pin": "1234"}), headers=_std_headers())
     assert r.status_code == 429
     data = r.get_json()
     assert data.get("status") == "error"
     assert "blocked_until" in data
 
 
-def test_persisted_session_block_denies_oidc_pinless_and_returns_blocked_until(
-    client, monkeypatch
-):
+def test_persisted_session_block_denies_oidc_pinless_and_returns_blocked_until(client, monkeypatch):
     import app as app_module
 
     # Mimic OIDC enabled policy allowing pinless
@@ -390,9 +359,7 @@ def test_inmemory_session_block_denies_oidc_pinless_and_returns_blocked_until(cl
         s["oidc_exp"] = int(_time.time()) + 3600
 
     # Apply in-memory session block
-    app_module.session_blocked_until["sessInMem"] = (
-        app_module.get_current_time() + timedelta(seconds=60)
-    )
+    app_module.session_blocked_until["sessInMem"] = app_module.get_current_time() + timedelta(seconds=60)
 
     r = client.post("/open-door", json={})
     assert r.status_code == 429
@@ -401,9 +368,7 @@ def test_inmemory_session_block_denies_oidc_pinless_and_returns_blocked_until(cl
     assert "blocked_until" in data
 
 
-def test_open_door_block_set_on_failure_includes_blocked_until(
-    client, app_module, monkeypatch
-):
+def test_open_door_block_set_on_failure_includes_blocked_until(client, app_module, monkeypatch):
     # Avoid real sleeps from progressive delay
     monkeypatch.setattr(time, "sleep", lambda s: None)
     headers = _std_headers()
@@ -440,9 +405,7 @@ def test_persisted_block_cookie_blocks_correct_pin(client):
 
         s["blocked_until_ts"] = _time.time() + 60
 
-    r = client.post(
-        "/open-door", data=json.dumps({"pin": "4321"}), headers=_std_headers()
-    )
+    r = client.post("/open-door", data=json.dumps({"pin": "4321"}), headers=_std_headers())
     assert r.status_code == 429
     data = r.get_json()
     assert data.get("status") == "error"
@@ -460,9 +423,7 @@ def test_success_clears_persisted_block_cookie_when_expired(client):
 
         s["blocked_until_ts"] = _time.time() - 1  # already expired
 
-    r = client.post(
-        "/open-door", data=json.dumps({"pin": "1234"}), headers=_std_headers()
-    )
+    r = client.post("/open-door", data=json.dumps({"pin": "1234"}), headers=_std_headers())
     assert r.status_code in (200, 502, 500)  # success in test_mode or HA error paths
     # Confirm cookie flag cleared
     with client.session_transaction() as s:

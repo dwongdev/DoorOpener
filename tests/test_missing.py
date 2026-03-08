@@ -90,10 +90,7 @@ def test_logs_clear_all(tmp_path):
 
 def test_logs_clear_test_only(tmp_path):
     log_file = tmp_path / "attempts.log"
-    keep_line = (
-        json.dumps({"timestamp": "2025-01-01", "status": "SUCCESS", "details": "real"})
-        + "\n"
-    )
+    keep_line = json.dumps({"timestamp": "2025-01-01", "status": "SUCCESS", "details": "real"}) + "\n"
     remove_line = (
         json.dumps(
             {

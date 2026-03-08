@@ -1,3 +1,15 @@
+[tool.ruff]
+line-length = 120
+exclude = [".git", ".github", "venv", ".venv", "build", "dist"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+
 [tool.bandit]
 exclude_dirs = [".git", ".github", "venv", ".venv", "build", "dist", "tests"]
 skips = ["B101"]
+
+[tool.pycodestyle]
+max-line-length = 120
+exclude = ".git,.github,venv,.venv,build,dist"
+statistics = true

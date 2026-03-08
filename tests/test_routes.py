@@ -30,9 +30,7 @@ def test_counters_reset_on_success_after_no_block(client, monkeypatch):
     import app as app_module
 
     # Fix identifiers so we can inspect counters
-    monkeypatch.setattr(
-        app_module, "get_client_identifier", lambda: ("2.2.2.2", "sessReset", "idReset")
-    )
+    monkeypatch.setattr(app_module, "get_client_identifier", lambda: ("2.2.2.2", "sessReset", "idReset"))
     app_module.user_pins["ok"] = "9999"
     app_module.test_mode = True
 
@@ -52,30 +50,20 @@ def test_counters_reset_on_success_after_no_block(client, monkeypatch):
 
     assert app_module.ip_failed_attempts["idReset"] == 0
     assert app_module.session_failed_attempts["sessReset"] == 0
-    assert (
-        "idReset" not in app_module.ip_blocked_until
-        or not app_module.ip_blocked_until["idReset"]
-    )
-    assert (
-        "sessReset" not in app_module.session_blocked_until
-        or not app_module.session_blocked_until["sessReset"]
-    )
+    assert "idReset" not in app_module.ip_blocked_until or not app_module.ip_blocked_until["idReset"]
+    assert "sessReset" not in app_module.session_blocked_until or not app_module.session_blocked_until["sessReset"]
 
 
 def test_counters_not_reset_on_success_when_block_active(client, monkeypatch):
     import app as app_module
 
     # Fix identifiers
-    monkeypatch.setattr(
-        app_module, "get_client_identifier", lambda: ("3.3.3.3", "sessBlock", "idBlock")
-    )
+    monkeypatch.setattr(app_module, "get_client_identifier", lambda: ("3.3.3.3", "sessBlock", "idBlock"))
     app_module.user_pins["ok2"] = "1111"
     app_module.test_mode = True
 
     # Apply active in-memory session block
-    app_module.session_blocked_until["sessBlock"] = (
-        app_module.get_current_time() + timedelta(seconds=30)
-    )
+    app_module.session_blocked_until["sessBlock"] = app_module.get_current_time() + timedelta(seconds=30)
 
     headers = {
         "User-Agent": "pytest-client/1.0 (+https://example.test)",

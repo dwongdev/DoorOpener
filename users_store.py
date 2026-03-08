@@ -2,8 +2,7 @@ import json
 import os
 import tempfile
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional
-
+from typing import Any, Dict, Optional
 
 ISO_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
 
@@ -38,9 +37,7 @@ class UsersStore:
             if os.path.exists(self.path):
                 with open(self.path, "r", encoding="utf-8") as f:
                     self.data = json.load(f)
-                    if "users" not in self.data or not isinstance(
-                        self.data["users"], dict
-                    ):
+                    if "users" not in self.data or not isinstance(self.data["users"], dict):
                         self.data = {"users": {}}
             else:
                 # ensure directory exists
@@ -111,9 +108,7 @@ class UsersStore:
     def _validate_username(username: str) -> bool:
         if not isinstance(username, str) or not (1 <= len(username) <= 32):
             return False
-        allowed = set(
-            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-."
-        )
+        allowed = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.")
         return all(c in allowed for c in username)
 
     @staticmethod
@@ -139,9 +134,7 @@ class UsersStore:
         }
         self._save_atomic()
 
-    def update_user(
-        self, username: str, pin: Optional[str] = None, active: Optional[bool] = None
-    ) -> None:
+    def update_user(self, username: str, pin: Optional[str] = None, active: Optional[bool] = None) -> None:
         self._ensure_loaded()
         if username not in self.data["users"]:
             raise KeyError("User not found")
@@ -169,9 +162,7 @@ class UsersStore:
         if username in self.data["users"]:
             self.data["users"][username]["last_used_at"] = _now_iso()
             # Increment times_used counter, defaulting to 0 if not present (for existing users)
-            self.data["users"][username]["times_used"] = (
-                self.data["users"][username].get("times_used", 0) + 1
-            )
+            self.data["users"][username]["times_used"] = self.data["users"][username].get("times_used", 0) + 1
             self._save_atomic()
 
     def user_exists(self, username: str) -> bool:

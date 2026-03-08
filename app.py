@@ -6,31 +6,35 @@ A secure Flask web app to open a door via Home Assistant API, with visual keypad
 enhanced multi-layer security, timezone support, and comprehensive brute force protection.
 """
 
-import os
-import json
-import time
 import hmac
+import json
 import logging
-from logging.handlers import RotatingFileHandler
-import requests
+import os
 import secrets
-from datetime import datetime, timedelta, timezone
+import tempfile
+import time
+import traceback
 from collections import defaultdict
+from configparser import ConfigParser
+from datetime import datetime, timedelta, timezone
+from logging.handlers import RotatingFileHandler
+
+import pytz
+import requests
 from flask import (
     Flask,
+    abort,
+    jsonify,
+    redirect,
     render_template,
     request,
-    jsonify,
-    session,
-    abort,
-    redirect,
-    url_for,
     send_from_directory,
+    session,
+    url_for,
 )
-from users_store import UsersStore
 from werkzeug.middleware.proxy_fix import ProxyFix
-from configparser import ConfigParser
-import pytz
+
+from users_store import UsersStore
 
 try:
     from authlib.integrations.flask_client import OAuth
@@ -58,9 +62,7 @@ def get_current_time():
 # --- Logging Setup ---
 # Use a dedicated logs directory and rotate logs to avoid unbounded growth.
 # Allow overriding via DOOROPENER_LOG_DIR for tests or special deployments.
-log_dir = os.environ.get("DOOROPENER_LOG_DIR") or os.path.join(
-    os.path.dirname(__file__), "logs"
-)
+log_dir = os.environ.get("DOOROPENER_LOG_DIR") or os.path.join(os.path.dirname(__file__), "logs")
 try:
     os.makedirs(log_dir, exist_ok=True)
 except Exception as e:
@@ -138,9 +140,7 @@ if not _env_secret:
 user_pins = dict(config.items("pins")) if config.has_section("pins") else {}
 
 # JSON-backed users store (overrides and new users). Path can be overridden in tests via env.
-USERS_STORE_PATH = os.environ.get(
-    "USERS_STORE_PATH", os.path.join(os.path.dirname(__file__), "users.json")
-)
+USERS_STORE_PATH = os.environ.get("USERS_STORE_PATH", os.path.join(os.path.dirname(__file__), "users.json"))
 users_store = UsersStore(USERS_STORE_PATH)
 
 
@@ -156,14 +156,11 @@ def get_effective_user_pins() -> dict:
 admin_password = config.get("admin", "admin_password", fallback=None)
 if not admin_password:
     raise RuntimeError(
-        "No admin password configured. Set [admin] admin_password in config.ini "
-        "or ensure the config file exists."
+        "No admin password configured. Set [admin] admin_password in config.ini or ensure the config file exists."
     )
 
 # Server Configuration
-server_port = int(
-    os.environ.get("DOOROPENER_PORT", config.getint("server", "port", fallback=6532))
-)
+server_port = int(os.environ.get("DOOROPENER_PORT", config.getint("server", "port", fallback=6532)))
 test_mode = config.getboolean("server", "test_mode", fallback=False)
 
 # OIDC Configuration
@@ -177,11 +174,7 @@ oidc_user_group = config.get("oidc", "user_group", fallback="")
 require_pin_for_oidc = config.getboolean("oidc", "require_pin_for_oidc", fallback=False)
 
 oauth = None
-if (
-    oidc_enabled
-    and OAuth is not None
-    and all([oidc_issuer, oidc_client_id, oidc_client_secret, oidc_redirect_uri])
-):
+if oidc_enabled and OAuth is not None and all([oidc_issuer, oidc_client_id, oidc_client_secret, oidc_redirect_uri]):
     try:
         oauth = OAuth(app)
         oauth.register(
@@ -204,12 +197,8 @@ if (
 ha_url = config.get("HomeAssistant", "url", fallback="http://homeassistant.local:8123")
 ha_token = config.get("HomeAssistant", "token", fallback=None)
 if not ha_token:
-    raise RuntimeError(
-        "No Home Assistant token configured. Set [HomeAssistant] token in config.ini."
-    )
-entity_id = config.get(
-    "HomeAssistant", "switch_entity"
-)  # Backward compatible; can be lock or switch
+    raise RuntimeError("No Home Assistant token configured. Set [HomeAssistant] token in config.ini.")
+entity_id = config.get("HomeAssistant", "switch_entity")  # Backward compatible; can be lock or switch
 battery_entity = config.get(
     "HomeAssistant",
     "battery_entity",
@@ -242,12 +231,8 @@ global_failed_attempts = 0
 global_last_reset = get_current_time()
 # Load security settings from config
 MAX_ATTEMPTS = config.getint("security", "max_attempts", fallback=5)
-BLOCK_TIME = timedelta(
-    minutes=config.getint("security", "block_time_minutes", fallback=5)
-)
-MAX_GLOBAL_ATTEMPTS_PER_HOUR = config.getint(
-    "security", "max_global_attempts_per_hour", fallback=50
-)
+BLOCK_TIME = timedelta(minutes=config.getint("security", "block_time_minutes", fallback=5))
+MAX_GLOBAL_ATTEMPTS_PER_HOUR = config.getint("security", "max_global_attempts_per_hour", fallback=50)
 SESSION_MAX_ATTEMPTS = config.getint("security", "session_max_attempts", fallback=3)
 
 # Configure main logging
@@ -256,9 +241,7 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[
         logging.StreamHandler(),
-        RotatingFileHandler(
-            os.path.join(log_dir, "door_access.log"), maxBytes=1_000_000, backupCount=3
-        ),
+        RotatingFileHandler(os.path.join(log_dir, "door_access.log"), maxBytes=1_000_000, backupCount=3),
     ],
 )
 logger = logging.getLogger(__name__)
@@ -323,8 +306,7 @@ def add_security_headers(response):
     # Modern browser policies
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = (
-        "geolocation=(), microphone=(), camera=(), payment=(), usb=(), "
-        "magnetometer=(), gyroscope=(), fullscreen=(self)"
+        "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), fullscreen=(self)"
     )
     response.headers["X-Permitted-Cross-Domain-Policies"] = "none"
     response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
@@ -407,9 +389,7 @@ def index():
 def battery():
     """Get battery level from Home Assistant battery sensor entity"""
     try:
-        logger.info(
-            f"Battery endpoint called - fetching state for entity: {battery_entity}"
-        )
+        logger.info(f"Battery endpoint called - fetching state for entity: {battery_entity}")
         url = f"{ha_url}/api/states/{battery_entity}"
         response = requests.get(
             url,
@@ -439,9 +419,7 @@ def battery():
                 logger.warning("Battery level is None")
                 return jsonify({"level": None})
         else:
-            logger.error(
-                f"Failed to fetch battery state: {response.status_code} {response.text}"
-            )
+            logger.error(f"Failed to fetch battery state: {response.status_code} {response.text}")
             return jsonify({"level": None})
     except Exception as e:
         logger.error(f"Exception fetching battery: {e}")
@@ -482,9 +460,7 @@ def open_door():
             }
             attempt_logger.info(json.dumps(log_entry))
             return (
-                jsonify(
-                    {"status": "error", "message": "Service temporarily unavailable"}
-                ),
+                jsonify({"status": "error", "message": "Service temporarily unavailable"}),
                 429,
             )
 
@@ -514,10 +490,7 @@ def open_door():
             )
 
         # Check in-memory session-based blocking (fallback when running single-worker)
-        if (
-            session_blocked_until[session_id]
-            and now < session_blocked_until[session_id]
-        ):
+        if session_blocked_until[session_id] and now < session_blocked_until[session_id]:
             remaining = (session_blocked_until[session_id] - now).total_seconds()
             reason = f"Session blocked for {int(remaining)} more seconds"
             log_entry = {
@@ -577,9 +550,7 @@ def open_door():
             session.pop("oidc_groups", None)
             session.pop("oidc_exp", None)
             oidc_auth = False  # Reset flag for the rest of the function
-            logger.warning(
-                f"OIDC session for IP {primary_ip} has expired. Re-authentication required."
-            )
+            logger.warning(f"OIDC session for IP {primary_ip} has expired. Re-authentication required.")
             # Optional: Could return an error directly, but we let it fall through to the PIN check
 
         oidc_groups = session.get("oidc_groups", [])
@@ -590,22 +561,13 @@ def open_door():
         pin_from_request = data.get("pin") if data else None
 
         # If no PIN provided but OIDC user is authenticated and allowed, proceed without PIN
-        if (
-            (not pin_from_request)
-            and oidc_auth
-            and oidc_user_allowed
-            and not require_pin_for_oidc
-        ):
+        if (not pin_from_request) and oidc_auth and oidc_user_allowed and not require_pin_for_oidc:
             # Re-check block state right before granting access
-            if (
-                session_blocked_until[session_id]
-                and now < session_blocked_until[session_id]
-            ) or (ip_blocked_until[identifier] and now < ip_blocked_until[identifier]):
+            if (session_blocked_until[session_id] and now < session_blocked_until[session_id]) or (
+                ip_blocked_until[identifier] and now < ip_blocked_until[identifier]
+            ):
                 remaining = 0
-                if (
-                    session_blocked_until[session_id]
-                    and now < session_blocked_until[session_id]
-                ):
+                if session_blocked_until[session_id] and now < session_blocked_until[session_id]:
                     remaining = max(
                         remaining,
                         int((session_blocked_until[session_id] - now).total_seconds()),
@@ -627,10 +589,7 @@ def open_door():
                 attempt_logger.info(json.dumps(log_entry))
                 # Determine latest block end
                 blocked_until_ts = None
-                if (
-                    session_blocked_until[session_id]
-                    and now < session_blocked_until[session_id]
-                ):
+                if session_blocked_until[session_id] and now < session_blocked_until[session_id]:
                     blocked_until_ts = session_blocked_until[session_id].timestamp()
                 if ip_blocked_until[identifier] and now < ip_blocked_until[identifier]:
                     ts = ip_blocked_until[identifier].timestamp()
@@ -648,10 +607,7 @@ def open_door():
 
             matched_user = oidc_user or "oidc-user"
             # Reset failed attempts upon authorized OIDC use only if not currently blocked
-            if not (
-                session_blocked_until[session_id]
-                and now < session_blocked_until[session_id]
-            ) and not (
+            if not (session_blocked_until[session_id] and now < session_blocked_until[session_id]) and not (
                 ip_blocked_until[identifier] and now < ip_blocked_until[identifier]
             ):
                 ip_failed_attempts[identifier] = 0
@@ -673,11 +629,7 @@ def open_door():
                     "details": reason,
                 }
                 attempt_logger.info(json.dumps(log_entry))
-                display_name = (
-                    matched_user.capitalize()
-                    if isinstance(matched_user, str)
-                    else "User"
-                )
+                display_name = matched_user.capitalize() if isinstance(matched_user, str) else "User"
                 return jsonify(
                     {
                         "status": "success",
@@ -716,11 +668,7 @@ def open_door():
                         users_store.touch_user(matched_user)
                     except Exception:
                         logger.exception("Error updating touch_user for OIDC open")
-                    display_name = (
-                        matched_user.capitalize()
-                        if isinstance(matched_user, str)
-                        else "User"
-                    )
+                    display_name = matched_user.capitalize() if isinstance(matched_user, str) else "User"
                     return jsonify(
                         {
                             "status": "success",
@@ -751,8 +699,6 @@ def open_door():
                     502,
                 )
             except Exception as e:
-                import traceback
-
                 reason = "Internal server error during API call"
                 log_entry = {
                     "timestamp": now.isoformat(),
@@ -803,15 +749,11 @@ def open_door():
 
         if matched_user:
             # Enforce any active block even on correct PIN before proceeding
-            if (
-                session_blocked_until[session_id]
-                and now < session_blocked_until[session_id]
-            ) or (ip_blocked_until[identifier] and now < ip_blocked_until[identifier]):
+            if (session_blocked_until[session_id] and now < session_blocked_until[session_id]) or (
+                ip_blocked_until[identifier] and now < ip_blocked_until[identifier]
+            ):
                 remaining = 0
-                if (
-                    session_blocked_until[session_id]
-                    and now < session_blocked_until[session_id]
-                ):
+                if session_blocked_until[session_id] and now < session_blocked_until[session_id]:
                     remaining = max(
                         remaining,
                         int((session_blocked_until[session_id] - now).total_seconds()),
@@ -833,10 +775,7 @@ def open_door():
                 attempt_logger.info(json.dumps(log_entry))
                 # Determine latest block end
                 blocked_until_ts = None
-                if (
-                    session_blocked_until[session_id]
-                    and now < session_blocked_until[session_id]
-                ):
+                if session_blocked_until[session_id] and now < session_blocked_until[session_id]:
                     blocked_until_ts = session_blocked_until[session_id].timestamp()
                 if ip_blocked_until[identifier] and now < ip_blocked_until[identifier]:
                     ts = ip_blocked_until[identifier].timestamp()
@@ -877,9 +816,7 @@ def open_door():
                 try:
                     users_store.touch_user(matched_user)
                 except Exception:
-                    logger.exception(
-                        "Error updating touch_user for PIN open (test mode)"
-                    )
+                    logger.exception("Error updating touch_user for PIN open (test mode)")
                 display_name = matched_user.capitalize()
                 return jsonify(
                     {
@@ -921,9 +858,7 @@ def open_door():
                     try:
                         users_store.touch_user(matched_user)
                     except Exception:
-                        logger.exception(
-                            "Error updating touch_user for PIN open (prod)"
-                        )
+                        logger.exception("Error updating touch_user for PIN open (prod)")
                     display_name = matched_user.capitalize()
                     return jsonify(
                         {
@@ -955,8 +890,6 @@ def open_door():
                     502,
                 )
             except Exception as e:
-                import traceback
-
                 reason = "Internal server error during API call"
                 log_entry = {
                     "timestamp": now.isoformat(),
@@ -980,9 +913,7 @@ def open_door():
             if session_failed_attempts[session_id] >= SESSION_MAX_ATTEMPTS:
                 session_blocked_until[session_id] = now + BLOCK_TIME
                 # Also persist in signed session cookie so block applies across workers
-                session["blocked_until_ts"] = (
-                    get_current_time() + BLOCK_TIME
-                ).timestamp()
+                session["blocked_until_ts"] = (get_current_time() + BLOCK_TIME).timestamp()
                 reason = f"Invalid PIN. Session blocked for {int(BLOCK_TIME.total_seconds() // 60)} minutes"
             elif ip_failed_attempts[identifier] >= MAX_ATTEMPTS:
                 ip_blocked_until[identifier] = now + BLOCK_TIME
@@ -1005,10 +936,7 @@ def open_door():
             attempt_logger.info(json.dumps(log_entry))
             # Include blocked_until if a block is now active
             resp = {"status": "error", "message": reason}
-            if (
-                session_blocked_until[session_id]
-                and now < session_blocked_until[session_id]
-            ):
+            if session_blocked_until[session_id] and now < session_blocked_until[session_id]:
                 resp["blocked_until"] = session_blocked_until[session_id].timestamp()
             elif ip_blocked_until[identifier] and now < ip_blocked_until[identifier]:
                 resp["blocked_until"] = ip_blocked_until[identifier].timestamp()
@@ -1137,12 +1065,7 @@ def oidc_callback():
         session.clear()
 
         # Extract user information from the claims
-        user = (
-            claims.get("email")
-            or claims.get("preferred_username")
-            or claims.get("name")
-            or "oidc-user"
-        )
+        user = claims.get("email") or claims.get("preferred_username") or claims.get("name") or "oidc-user"
         groups = claims.get("groups") or claims.get("roles") or []
         if isinstance(groups, str):
             groups = [g.strip() for g in groups.split(",") if g.strip()]
@@ -1200,10 +1123,7 @@ def admin_auth():
 
     # Check if this session is currently blocked
     now = get_current_time()
-    if (
-        session_blocked_until.get(session_id)
-        and now < session_blocked_until[session_id]
-    ):
+    if session_blocked_until.get(session_id) and now < session_blocked_until[session_id]:
         remaining = (session_blocked_until[session_id] - now).total_seconds()
         attempt_logger.info(
             json.dumps(
@@ -1333,7 +1253,7 @@ def admin_logs():
 
         if os.path.exists(log_path):
             try:
-                with open(log_path, "r") as f:
+                with open(log_path, "r", encoding="utf-8") as f:
                     for line in f:
                         try:
                             # Handle log lines that may have timestamp prefix from logging module
@@ -1348,9 +1268,7 @@ def admin_logs():
                                 {
                                     "timestamp": log_data.get("timestamp"),
                                     "ip": log_data.get("ip"),
-                                    "user": log_data.get("user")
-                                    if log_data.get("user") != "UNKNOWN"
-                                    else None,
+                                    "user": log_data.get("user") if log_data.get("user") != "UNKNOWN" else None,
                                     "status": log_data.get("status"),
                                     "details": log_data.get("details"),
                                 }
@@ -1363,9 +1281,7 @@ def admin_logs():
                                     if len(parts) >= 4:
                                         timestamp = parts[0]
                                         ip = parts[1]
-                                        user = (
-                                            parts[2] if parts[2] != "UNKNOWN" else None
-                                        )
+                                        user = parts[2] if parts[2] != "UNKNOWN" else None
                                         status = parts[3]
                                         details = parts[4] if len(parts) > 4 else None
 
@@ -1379,14 +1295,10 @@ def admin_logs():
                                             }
                                         )
                             except Exception as e:
-                                logger.error(
-                                    f"Error parsing old format log line: {line}, error: {e}"
-                                )
+                                logger.error(f"Error parsing old format log line: {line}, error: {e}")
                                 continue
                         except Exception as e:
-                            logger.error(
-                                f"Error parsing JSON log line: {line}, error: {e}"
-                            )
+                            logger.error(f"Error parsing JSON log line: {line}, error: {e}")
                             continue
             except Exception as e:
                 logger.error(f"Error reading log file: {e}")
@@ -1422,8 +1334,6 @@ def admin_logs_clear():
                 pass
         elif mode == "test_only":
             # Filter out lines that look like TEST MODE entries
-            import tempfile
-
             lines = []
             try:
                 with open(log_path, "r", encoding="utf-8") as f:
@@ -1449,9 +1359,7 @@ def admin_logs_clear():
             kept = len(filtered)
 
             # Atomic write
-            fd, tmp_path = tempfile.mkstemp(
-                prefix="log.", suffix=".txt", dir=os.path.dirname(log_path) or None
-            )
+            fd, tmp_path = tempfile.mkstemp(prefix="log.", suffix=".txt", dir=os.path.dirname(log_path) or None)
             try:
                 with os.fdopen(fd, "w", encoding="utf-8") as tmp:
                     tmp.writelines(filtered)
@@ -1461,9 +1369,7 @@ def admin_logs_clear():
                     if os.path.exists(tmp_path):
                         os.remove(tmp_path)
                 except Exception:
-                    logger.exception(
-                        f"Failed to remove temporary log file temp_path={tmp_path}"
-                    )
+                    logger.exception(f"Failed to remove temporary log file temp_path={tmp_path}")
         else:
             return jsonify({"error": "Invalid mode"}), 400
 
@@ -1645,22 +1551,14 @@ def admin_users_migrate(username: str):
     body = request.get_json(silent=True) or {}
     new_pin = body.get("pin")
     if new_pin is not None:
-        if (
-            not isinstance(new_pin, str)
-            or not new_pin.isdigit()
-            or not (4 <= len(new_pin) <= 8)
-        ):
+        if not isinstance(new_pin, str) or not new_pin.isdigit() or not (4 <= len(new_pin) <= 8):
             return jsonify({"error": "PIN must be 4-8 digits"}), 400
         pin_to_use = new_pin
     else:
         pin_to_use = existing_pin
 
     # Validate PIN format
-    if (
-        not isinstance(pin_to_use, str)
-        or not pin_to_use.isdigit()
-        or not (4 <= len(pin_to_use) <= 8)
-    ):
+    if not isinstance(pin_to_use, str) or not pin_to_use.isdigit() or not (4 <= len(pin_to_use) <= 8):
         return jsonify({"error": "PIN must be 4-8 digits"}), 400
 
     # Create user in JSON store
@@ -1736,9 +1634,7 @@ def admin_users_migrate_all():
                     # Update in-memory user_pins
                     user_pins.pop(username, None)
             except Exception as config_err:
-                logger.warning(
-                    f"Failed to remove {username} from config.ini: {config_err}"
-                )
+                logger.warning(f"Failed to remove {username} from config.ini: {config_err}")
 
             attempt_logger.info(
                 json.dumps(
@@ -1783,9 +1679,7 @@ def oidc_logout():
                 logout_url = config.get("end_session_endpoint")
                 if logout_url:
                     # Redirect to the OIDC provider's logout endpoint
-                    return redirect(
-                        f"{logout_url}?redirect_uri={url_for('index', _external=True)}"
-                    )
+                    return redirect(f"{logout_url}?redirect_uri={url_for('index', _external=True)}")
                 else:
                     logger.error("Logout URL not found in .well-known configuration")
                     return (
@@ -1793,9 +1687,7 @@ def oidc_logout():
                         500,
                     )
             else:
-                logger.error(
-                    f"Failed to fetch .well-known configuration: {response.status_code}"
-                )
+                logger.error(f"Failed to fetch .well-known configuration: {response.status_code}")
                 return (
                     jsonify(
                         {

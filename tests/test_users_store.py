@@ -1,9 +1,10 @@
-import pytest
 import json
 import os
 import tempfile
-from unittest.mock import patch
 from datetime import datetime, timezone
+from unittest.mock import patch
+
+import pytest
 
 from users_store import UsersStore, _now_iso
 
@@ -213,9 +214,7 @@ def test_now_iso_format():
     iso_string = _now_iso()
 
     # Should be parseable as datetime
-    parsed = datetime.fromisoformat(
-        iso_string.replace("Z", "+00:00") if iso_string.endswith("Z") else iso_string
-    )
+    parsed = datetime.fromisoformat(iso_string.replace("Z", "+00:00") if iso_string.endswith("Z") else iso_string)
     assert isinstance(parsed, datetime)
 
     # Should be recent (within last minute)

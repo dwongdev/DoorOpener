@@ -1,7 +1,7 @@
 """Additional tests to exercise helper utilities used in the suite."""
 
 import json
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 # Test Configuration
 TEST_CONFIG = {
@@ -48,9 +48,7 @@ def setup_test_config(mock_config):
         return str(val).lower() == "true" if val is not None else False
 
     mock_config.return_value.getboolean.side_effect = get_boolean
-    mock_config.return_value.getint.side_effect = lambda s, k, **kw: int(
-        config_get(s, k, **kw) or 0
-    )
+    mock_config.return_value.getint.side_effect = lambda s, k, **kw: int(config_get(s, k, **kw) or 0)
 
 
 # --- Actual tests for coverage ---
