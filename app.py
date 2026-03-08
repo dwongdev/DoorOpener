@@ -1448,6 +1448,8 @@ def admin_users_list():
 def admin_users_create():
     if not _require_admin_authenticated():
         return jsonify({"error": "Authentication required"}), 401
+    if not _check_admin_csrf():
+        return jsonify({"error": "Invalid CSRF token"}), 403
     try:
         body = request.get_json(silent=True) or {}
         username = body.get("username")
