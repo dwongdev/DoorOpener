@@ -1,0 +1,3 @@
+[tool.bandit]
+exclude_dirs = [".git", ".github", "venv", ".venv", "build", "dist", "tests"]
+skips = ["B101"]
