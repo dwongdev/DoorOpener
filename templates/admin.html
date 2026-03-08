@@ -668,6 +668,7 @@
                 const check = await fetch('/admin/check-auth', { credentials: 'same-origin', cache: 'no-store' });
                 const checkData = await check.json();
                 if (checkData.authenticated) {
+                    if (checkData.csrf_token) csrfToken = checkData.csrf_token;
                     await showDashboard();
                 } else {
                     await new Promise(r => setTimeout(r, 150));
