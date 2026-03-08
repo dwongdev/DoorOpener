@@ -1196,7 +1196,7 @@
                 .finally(() => {
                     // Reset button and clear PIN after attempt
                     setTimeout(() => {
-                        const submitBtn = document.getElementById('submitBtn');
+                        submitBtn.classList.remove('submitting');
                         submitBtn.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
                         submitBtn.textContent = '✓';
 
