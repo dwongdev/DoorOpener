@@ -543,6 +543,7 @@ def open_door():
         oidc_exp = session.get("oidc_exp")
 
         # Check token expiration
+        oidc_session_expired = False
         if oidc_auth and (not oidc_exp or oidc_exp < time.time()):
             # OIDC session has expired, clear all relevant session data
             session.pop("oidc_authenticated", None)
@@ -550,8 +551,8 @@ def open_door():
             session.pop("oidc_groups", None)
             session.pop("oidc_exp", None)
             oidc_auth = False  # Reset flag for the rest of the function
+            oidc_session_expired = True
             logger.warning(f"OIDC session for IP {primary_ip} has expired. Re-authentication required.")
-            # Optional: Could return an error directly, but we let it fall through to the PIN check
 
         oidc_groups = session.get("oidc_groups", [])
         oidc_user = session.get("oidc_user")
@@ -559,6 +560,10 @@ def open_door():
 
         data = request.get_json(force=True, silent=True)
         pin_from_request = data.get("pin") if data else None
+
+        # If session expired and no PIN provided, return a clear error instead of confusing "PIN required"
+        if oidc_session_expired and not pin_from_request:
+            return jsonify({"status": "error", "message": "Session expired. Please log in again."}), 401
 
         # If no PIN provided but OIDC user is authenticated and allowed, proceed without PIN
         if (not pin_from_request) and oidc_auth and oidc_user_allowed and not require_pin_for_oidc:
@@ -919,11 +924,7 @@ def open_door():
                 ip_blocked_until[identifier] = now + BLOCK_TIME
                 reason = f"Invalid PIN. Access blocked for {int(BLOCK_TIME.total_seconds() // 60)} minutes"
             else:
-                remaining_attempts = min(
-                    SESSION_MAX_ATTEMPTS - session_failed_attempts[session_id],
-                    MAX_ATTEMPTS - ip_failed_attempts[identifier],
-                )
-                reason = f"Invalid PIN. {remaining_attempts} attempts remaining"
+                reason = "Invalid PIN"
 
             log_entry = {
                 "timestamp": now.isoformat(),
@@ -1187,8 +1188,7 @@ def admin_auth():
             session_blocked_until[session_id] = now + BLOCK_TIME
             details = f"Invalid admin password. Session blocked for {int(BLOCK_TIME.total_seconds() // 60)} minutes"
         else:
-            remaining = SESSION_MAX_ATTEMPTS - session_failed_attempts[session_id]
-            details = f"Invalid admin password. {remaining} attempts remaining"
+            details = "Invalid admin password"
 
         attempt_logger.info(
             json.dumps(
@@ -1704,6 +1704,12 @@ def oidc_logout():
         # If OIDC is not enabled, just clear the session
         session.clear()
         return redirect(url_for("index"))
+
+
+@app.route("/health", methods=["GET"])
+def health():
+    """Health check endpoint."""
+    return jsonify({"status": "ok"}), 200
 
 
 if __name__ == "__main__":

@@ -793,6 +793,22 @@
         }
     }
 
+    function timeAgo(isoString) {
+        if (!isoString) return '—';
+        const diff = Date.now() - new Date(isoString).getTime();
+        const s = Math.floor(diff / 1000);
+        if (s < 60) return 'just now';
+        const m = Math.floor(s / 60);
+        if (m < 60) return m + 'm ago';
+        const h = Math.floor(m / 60);
+        if (h < 24) return h + 'h ago';
+        const d = Math.floor(h / 24);
+        if (d < 30) return d + 'd ago';
+        const mo = Math.floor(d / 30);
+        if (mo < 12) return mo + 'mo ago';
+        return Math.floor(mo / 12) + 'y ago';
+    }
+
     function renderUsers(users) {
         const tbody = document.getElementById('usersTableBody');
         const cards = document.getElementById('userCards');
@@ -814,8 +830,8 @@
             const srcBadge = u.source === 'config'
                 ? '<span class="badge badge-config">Config</span>'
                 : '<span class="badge badge-store">Store</span>';
-            const created  = u.created_at   ? new Date(u.created_at).toLocaleString()   : '—';
-            const lastUsed = u.last_used_at ? new Date(u.last_used_at).toLocaleString() : '—';
+            const created  = u.created_at   ? `<span title="${new Date(u.created_at).toLocaleString()}">${timeAgo(u.created_at)}</span>`   : '—';
+            const lastUsed = u.last_used_at ? `<span title="${new Date(u.last_used_at).toLocaleString()}">${timeAgo(u.last_used_at)}</span>` : '—';
             const uses = u.times_used || 0;
 
             let actions = '';
@@ -844,7 +860,7 @@
 
         if (cards) {
             cards.innerHTML = users.map(u => {
-                const lastUsed = u.last_used_at ? new Date(u.last_used_at).toLocaleString() : '—';
+                const lastUsed = u.last_used_at ? `<span title="${new Date(u.last_used_at).toLocaleString()}">${timeAgo(u.last_used_at)}</span>` : '—';
                 const actions = u.can_edit ? `
                     <div style="display:flex; gap:7px; flex-wrap:wrap; margin-top:10px;">
                         <button class="btn btn-purple btn-sm" onclick="openEditUser('${escapeHtml(u.username)}')">Edit</button>
