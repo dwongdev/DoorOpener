@@ -585,14 +585,70 @@
         }
 
         .access-popup.granted {
-            color: #00e676;
-            box-shadow: 0 0 28px rgba(0, 230, 118, 0.4), 0 0 64px rgba(0, 230, 118, 0.15), inset 0 0 24px rgba(0, 230, 118, 0.07);
-            text-shadow: 0 0 14px rgba(0, 230, 118, 0.95), 0 0 36px rgba(0, 230, 118, 0.45);
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #00ff41;
+            background: rgba(0, 6, 0, 0.93);
+            border: 1px solid rgba(0, 255, 65, 0.65);
+            border-radius: 3px;
+            box-shadow:
+                0 0 10px rgba(0, 255, 65, 0.55),
+                0 0 40px rgba(0, 255, 65, 0.12),
+                inset 0 0 18px rgba(0, 255, 65, 0.05);
+            text-shadow: 0 0 7px #00ff41, 0 0 18px rgba(0, 255, 65, 0.55);
+            overflow: hidden;
         }
 
         .access-popup.granted::before {
-            content: '✓  ';
+            content: '';
         }
+
+        .access-popup.granted::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 3px,
+                rgba(0, 0, 0, 0.1) 3px,
+                rgba(0, 0, 0, 0.1) 4px
+            );
+            pointer-events: none;
+        }
+
+        @keyframes scan-sweep {
+            0%   { transform: translateY(-100%); opacity: 0.5; }
+            100% { transform: translateY(400%);  opacity: 0; }
+        }
+
+        .access-popup.granted .scan-line {
+            position: absolute;
+            left: 0; right: 0;
+            height: 30%;
+            background: linear-gradient(180deg, transparent, rgba(0,255,65,0.08), transparent);
+            animation: scan-sweep 0.6s ease-out forwards;
+            pointer-events: none;
+        }
+
+        /* Container flash on result */
+        @keyframes flash-grant {
+            0%   { box-shadow: 0 8px 40px 0 rgba(31,38,135,0.22), 0 2px 16px 0 rgba(255,255,255,0.5), inset 0 1px 0 0 rgba(255,255,255,0.75); border-color: rgba(255,255,255,0.6); }
+            18%  { box-shadow: 0 0 0 4px rgba(0,255,65,0.28), 0 8px 52px rgba(0,255,65,0.22), inset 0 0 28px rgba(0,255,65,0.07); border-color: rgba(0,255,65,0.55); }
+            100% { box-shadow: 0 8px 40px 0 rgba(31,38,135,0.22), 0 2px 16px 0 rgba(255,255,255,0.5), inset 0 1px 0 0 rgba(255,255,255,0.75); border-color: rgba(255,255,255,0.6); }
+        }
+
+        @keyframes flash-deny {
+            0%   { box-shadow: 0 8px 40px 0 rgba(31,38,135,0.22), 0 2px 16px 0 rgba(255,255,255,0.5), inset 0 1px 0 0 rgba(255,255,255,0.75); border-color: rgba(255,255,255,0.6); }
+            18%  { box-shadow: 0 0 0 4px rgba(255,59,59,0.28), 0 8px 52px rgba(255,59,59,0.2), inset 0 0 28px rgba(255,59,59,0.09); border-color: rgba(255,59,59,0.55); }
+            100% { box-shadow: 0 8px 40px 0 rgba(31,38,135,0.22), 0 2px 16px 0 rgba(255,255,255,0.5), inset 0 1px 0 0 rgba(255,255,255,0.75); border-color: rgba(255,255,255,0.6); }
+        }
+
+        .container.flash-grant { animation: flash-grant 1.3s ease-out; }
+        .container.flash-deny  { animation: flash-deny  1.0s ease-out; }
 
         /* Submission loading overlay */
         #submit-overlay {
@@ -1234,6 +1290,7 @@
                             window.navigator.vibrate([50, 30, 150, 50, 80, 30, 200]);
                         }
                         showAccessPopup('accessGrantedPopup');
+                        flashContainer('grant');
                     } else {
                         if ((status === 429 || status === 401) && data && data.blocked_until) {
                             startBlockCountdown(data.blocked_until);
@@ -1249,6 +1306,7 @@
                         // Play failure sound and enhanced vibration
                         playFailureSound();
                         showAccessPopup('accessDeniedPopup');
+                        flashContainer('deny');
                         if (window.navigator.vibrate) {
                             // Enhanced failure vibration pattern: strong buzz with pauses
                             window.navigator.vibrate([200, 100, 200, 100, 300]);
@@ -1297,6 +1355,7 @@
                         showStatus('Success: ' + data.message, 'success');
                         playSuccessSound();
                         showAccessPopup('accessGrantedPopup');
+                        flashContainer('grant');
                         if (window.navigator.vibrate) window.navigator.vibrate([50, 30, 150, 50, 80, 30, 200]);
                     } else {
                         if ((status === 429 || status === 401) && data && data.blocked_until) {
@@ -1308,6 +1367,7 @@
                         submitBtn.textContent = '✗';
                         playFailureSound();
                         showAccessPopup('accessDeniedPopup');
+                        flashContainer('deny');
                         if (window.navigator.vibrate) window.navigator.vibrate([200, 100, 200, 100, 300]);
                     }
                 })
@@ -1549,15 +1609,52 @@
             } catch (e) { }
         }
 
+        function flashContainer(type) {
+            const c = document.querySelector('.container');
+            if (!c) return;
+            c.classList.remove('flash-grant', 'flash-deny');
+            void c.offsetWidth; // reflow to restart animation
+            c.classList.add(type === 'grant' ? 'flash-grant' : 'flash-deny');
+            setTimeout(() => c.classList.remove('flash-grant', 'flash-deny'), 1400);
+        }
+
         function showAccessPopup(id) {
             const popup = document.getElementById(id);
             if (!popup) return;
+            clearInterval(popup._typeInterval);
+            clearInterval(popup._blinkInterval);
+
             popup.style.display = 'block';
             setTimeout(() => popup.classList.add('visible'), 10);
+
+            if (id === 'accessGrantedPopup') {
+                const full = '> ACCESS_GRANTED';
+                let i = 0;
+                popup.innerHTML = '<span class="scan-line"></span>_';
+                popup._typeInterval = setInterval(() => {
+                    i++;
+                    popup.innerHTML = '<span class="scan-line"></span>' + full.slice(0, i) + '_';
+                    if (i >= full.length) {
+                        clearInterval(popup._typeInterval);
+                        let on = true;
+                        popup._blinkInterval = setInterval(() => {
+                            on = !on;
+                            popup.innerHTML = '<span class="scan-line"></span>' + full + (on ? '_' : ' ');
+                        }, 420);
+                    }
+                }, 48);
+            }
+
+            const hideDelay = id === 'accessGrantedPopup' ? 2100 : 1700;
             setTimeout(() => {
+                clearInterval(popup._typeInterval);
+                clearInterval(popup._blinkInterval);
                 popup.classList.remove('visible');
-                setTimeout(() => { popup.style.display = 'none'; }, 400);
-            }, 1700);
+                setTimeout(() => {
+                    popup.style.display = 'none';
+                    if (id === 'accessGrantedPopup') popup.innerHTML = '';
+                }, 400);
+            }, hideDelay);
         }
 
 
