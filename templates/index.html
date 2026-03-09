@@ -737,13 +737,22 @@
 
         /* Optional page title */
         #page-title {
-            text-align: center;
-            font-size: 0.85rem;
-            font-weight: 600;
-            letter-spacing: 0.08em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1.25rem;
+            color: rgba(255, 255, 255, 0.55);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
             text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 1rem;
+        }
+        #page-title::before,
+        #page-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
         }
 
         /* PIN display */
