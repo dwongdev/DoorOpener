@@ -1,3 +1,4 @@
+import hmac
 import json
 import os
 import tempfile
@@ -180,3 +181,13 @@ class UsersStore:
     def user_exists(self, username: str) -> bool:
         self._ensure_loaded()
         return username in self.data["users"]
+
+    def find_disabled_user_by_pin(self, pin: str) -> Optional[str]:
+        """Return the username of an inactive user whose PIN matches, or None."""
+        self._ensure_loaded()
+        for username, meta in self.data["users"].items():
+            if not bool(meta.get("active", True)):
+                stored_pin = meta.get("pin", "")
+                if isinstance(stored_pin, str) and hmac.compare_digest(pin, stored_pin):
+                    return username
+        return None

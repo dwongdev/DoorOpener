@@ -915,6 +915,28 @@ def open_door():
                 attempt_logger.info(json.dumps(log_entry))
                 return jsonify({"status": "error", "message": reason}), 500
         else:
+            # Check if the PIN belongs to a disabled store user before treating as wrong PIN
+            disabled_user = users_store.find_disabled_user_by_pin(pin_from_request)
+            if disabled_user:
+                log_entry = {
+                    "timestamp": now.isoformat(),
+                    "ip": primary_ip,
+                    "session": session_id[:8],
+                    "user": disabled_user,
+                    "status": "DISABLED_USER",
+                    "details": "Access denied: account disabled",
+                }
+                attempt_logger.info(json.dumps(log_entry))
+                return (
+                    jsonify(
+                        {
+                            "status": "error",
+                            "message": "Your account has been disabled. Contact the administrator.",
+                        }
+                    ),
+                    403,
+                )
+
             # Failed authentication - increment all counters
             ip_failed_attempts[identifier] += 1
             session_failed_attempts[session_id] += 1
