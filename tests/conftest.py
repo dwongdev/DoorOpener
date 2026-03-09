@@ -63,8 +63,9 @@ def reset_app_globals(monkeypatch):
     if "app" not in sys.modules:
         return
 
-    import app as app_module
     from collections import defaultdict
+
+    import app as app_module
 
     monkeypatch.setattr(app_module, "ip_failed_attempts", defaultdict(int))
     monkeypatch.setattr(app_module, "ip_blocked_until", defaultdict(lambda: None))
