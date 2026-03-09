@@ -1,6 +1,5 @@
 import json
 import os
-import shutil
 import tempfile
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
@@ -67,7 +66,15 @@ class UsersStore:
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as f:
                 json.dump(self.data, f, ensure_ascii=False, indent=2)
-            shutil.move(tmp_path, self.path)
+            try:
+                # Same filesystem: atomic rename
+                os.replace(tmp_path, self.path)
+            except OSError:
+                # Cross-device (tmp in /tmp, target is a bind-mount): copy content
+                # only — no metadata — then remove the temp file.
+                with open(tmp_path, "r", encoding="utf-8") as src, open(self.path, "w", encoding="utf-8") as dst:
+                    dst.write(src.read())
+                os.remove(tmp_path)
         except Exception:
             try:
                 os.remove(tmp_path)
