@@ -462,22 +462,22 @@
             padding: 0 13px;
             gap: 8px;
             box-sizing: border-box;
-            background: rgba(255, 255, 255, 0.22);
+            background: rgba(0, 0, 0, 0.28);
             border-radius: 24px;
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.32);
+            border: 1px solid rgba(255, 255, 255, 0.18);
             text-decoration: none;
             overflow: hidden;
             transition: width 0.38s cubic-bezier(.4, 0, .2, 1),
                         background 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
         }
 
         .gear-spin-wrap:hover,
         .gear-spin-wrap:focus {
             width: 148px;
-            background: rgba(255, 255, 255, 0.32);
-            box-shadow: 0 6px 22px rgba(0, 0, 0, 0.26);
+            background: rgba(0, 0, 0, 0.42);
+            box-shadow: 0 6px 22px rgba(0, 0, 0, 0.32);
         }
 
         .gear-icon {
@@ -550,6 +550,8 @@
             padding: 14px 30px;
             pointer-events: none;
             opacity: 0;
+            white-space: nowrap;
+            width: max-content;
             transition: opacity 0.28s cubic-bezier(.4, 0, .2, 1), transform 0.28s cubic-bezier(.4, 0, .2, 1);
         }
 
@@ -990,7 +992,6 @@
             }
 
             #battery-container,
-            .gear-spin-wrap,
             .github-btn {
                 background: rgba(0, 0, 0, 0.35);
                 border-color: rgba(255, 255, 255, 0.12);
@@ -998,7 +999,6 @@
             }
 
             #battery-container:hover,
-            .gear-spin-wrap:hover,
             .github-btn:hover,
             .github-btn:focus {
                 background: rgba(0, 0, 0, 0.5);

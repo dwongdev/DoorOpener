@@ -516,22 +516,22 @@
             padding: 0 13px;
             gap: 10px;
             box-sizing: border-box;
-            background: rgba(255, 255, 255, 0.22);
+            background: rgba(0, 0, 0, 0.28);
             border-radius: 24px;
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.32);
+            border: 1px solid rgba(255, 255, 255, 0.18);
             text-decoration: none;
             overflow: hidden;
             transition: width 0.38s cubic-bezier(.4, 0, .2, 1),
                         background 0.2s, box-shadow 0.2s;
             z-index: 1000;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
         }
 
         .gear-spin-wrap:hover,
         .gear-spin-wrap:focus {
             width: 140px;
-            background: rgba(255, 255, 255, 0.32);
+            background: rgba(0, 0, 0, 0.42);
             box-shadow: 0 6px 22px rgba(0, 0, 0, 0.26);
         }
 
@@ -728,7 +728,7 @@
                         <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#66bb6a;margin-right:5px;vertical-align:middle;"></span>Successful</span>
                     </div>
                 </div>
-                <div id="hourlyChart" style="display:flex; align-items:flex-end; gap:3px; height:160px; padding-bottom:22px; position:relative;"></div>
+                <div id="hourlyChart" style="display:flex; align-items:stretch; gap:2px; height:160px;"></div>
             </div>
         </div>
 
@@ -1139,28 +1139,28 @@
         const labels = ['12a','1a','2a','3a','4a','5a','6a','7a','8a','9a','10a','11a',
                         '12p','1p','2p','3p','4p','5p','6p','7p','8p','9p','10p','11p'];
         const nowHour = new Date().getHours();
+        const LABEL_H = 18;   // px reserved for the hour label
+        const BAR_H   = 160 - LABEL_H; // px available for bars
 
         const wrap = document.getElementById('hourlyChart');
         wrap.innerHTML = counts.map((cnt, h) => {
-            const totalPct  = Math.round(cnt / maxVal * 100);
-            const succPct   = cnt > 0 ? Math.round(successes[h] / maxVal * 100) : 0;
-            const isNow     = h === nowHour;
-            return `<div title="${labels[h]}: ${cnt} total, ${successes[h]} successful" style="
-                flex:1; display:flex; flex-direction:column; align-items:center;
-                justify-content:flex-end; gap:2px; position:relative; height:100%;
-                cursor:default;">
-                <div style="
-                    position:absolute; bottom:22px; width:100%; display:flex;
-                    flex-direction:column; justify-content:flex-end; height:calc(100% - 22px);">
-                    <div style="width:100%; height:${totalPct}%; background:rgba(66,165,245,0.5);
-                        border-radius:4px 4px 0 0; position:relative; transition:height 0.3s;">
-                        <div style="position:absolute; bottom:0; width:100%; height:${succPct * 100 / Math.max(totalPct,1)}%;
-                            background:rgba(102,187,106,0.88); border-radius:4px 4px 0 0;"></div>
+            const barPx  = Math.round(cnt / maxVal * BAR_H);
+            const succPx = cnt > 0 ? Math.round(successes[h] / cnt * barPx) : 0;
+            const isNow  = h === nowHour;
+            return `<div title="${labels[h]}: ${cnt} total, ${successes[h]} successful"
+                style="flex:1; display:flex; flex-direction:column; cursor:default;">
+                <div style="flex:1; display:flex; flex-direction:column; justify-content:flex-end;">
+                    <div style="width:100%; height:${barPx}px; background:rgba(66,165,245,0.55);
+                        border-radius:3px 3px 0 0; position:relative; overflow:hidden;
+                        transition:height 0.3s;">
+                        <div style="position:absolute; bottom:0; width:100%; height:${succPx}px;
+                            background:rgba(102,187,106,0.9); border-radius:3px 3px 0 0;"></div>
                     </div>
                 </div>
-                <div style="position:absolute; bottom:4px; font-size:0.6rem;
-                    color:${isNow ? '#fff' : 'rgba(255,255,255,0.3)'};
-                    font-weight:${isNow ? '700' : '400'}; white-space:nowrap;">
+                <div style="height:${LABEL_H}px; display:flex; align-items:center;
+                    justify-content:center; font-size:0.58rem; white-space:nowrap;
+                    color:${isNow ? '#fff' : 'rgba(255,255,255,0.35)'};
+                    font-weight:${isNow ? '700' : '400'};">
                     ${labels[h]}
                 </div>
             </div>`;
