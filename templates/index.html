@@ -1630,11 +1630,7 @@
                                     popup.innerHTML = '<span class="scan-line"></span>' + line1 + '<br>' + line2.slice(0, j) + '_';
                                     if (j >= line2.length) {
                                         clearInterval(popup._typeInterval);
-                                        let on = true;
-                                        popup._blinkInterval = setInterval(() => {
-                                            on = !on;
-                                            popup.innerHTML = '<span class="scan-line"></span>' + line1 + '<br>' + line2 + (on ? '_' : ' ');
-                                        }, 420);
+                                        popup.innerHTML = '<span class="scan-line"></span>' + line1 + '<br>' + line2;
                                     }
                                 }, 42);
                             }, 160);
