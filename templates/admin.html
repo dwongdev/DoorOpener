@@ -571,13 +571,72 @@
             0%   { transform: rotate(0deg); }
             100% { transform: rotate(-360deg); }
         }
+
+        /* ===== CSP-safe utility classes (replaces inline style="...") ===== */
+        #loginForm    { display:none; max-width:400px; margin:10vh auto 0; padding:2.5rem; text-align:center; }
+        #dashboard    { display:none; }
+        #loginError   { color:#ff5252; margin-top:1rem; font-size:0.88rem; display:none; }
+        #leaderboardSection { display:none; }
+        #usersTab     { display:none; }
+        #activityTab  { display:none; }
+        #btnMigrateAll { display:none; }
+        #hourlyChart  { display:flex; align-items:stretch; gap:2px; height:160px; }
+
+        .sso-divider  { margin:1.2rem 0; color:rgba(255,255,255,0.28); font-size:0.85rem; }
+        .ctrl-spacer  { flex:1; }
+        .user-action-row { display:flex; gap:8px; }
+        .chart-legend { display:flex; gap:14px; align-items:center; font-size:0.8rem; color:rgba(255,255,255,0.45); }
+        .section-hd-mb { margin-bottom:1.4rem; }
+        .legend-dot   { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; vertical-align:middle; }
+        .legend-dot-all { background:#42a5f5; }
+        .legend-dot-ok  { background:#66bb6a; }
+
+        /* table cell styles */
+        .td-ts    { font-size:0.8rem; color:rgba(255,255,255,0.6); white-space:nowrap; }
+        .td-ip    { font-family:monospace; font-size:0.84rem; color:rgba(255,255,255,0.65); }
+        .td-user  { font-weight:600; }
+        .td-det   { font-size:0.83rem; color:rgba(255,255,255,0.6); }
+        .td-date  { font-size:0.8rem; color:rgba(255,255,255,0.5); }
+        .td-uses  { font-weight:700; color:#64b5f6; }
+        .td-acts  { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+        .cfg-only { font-size:0.8rem; color:rgba(255,255,255,0.3); }
+
+        /* mobile card styles */
+        .mc-name   { color:#fff; }
+        .mc-uses   { color:#64b5f6; font-weight:700; }
+        .mc-small  { font-size:0.8rem; }
+        .mc-tinyts { font-size:0.78rem; }
+        .mc-mono   { font-family:monospace; }
+        .mc-actions { display:flex; gap:7px; flex-wrap:wrap; margin-top:10px; }
+
+        /* modal styles */
+        .modal-hd   { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+        .modal-title { margin:0; color:#fff; font-size:1.05rem; }
+        .modal-close { padding:4px 9px; }
+        .modal-ft   { display:flex; gap:8px; justify-content:flex-end; margin-top:1.2rem; }
+        .modal-desc { color:rgba(255,255,255,0.65); font-size:0.9rem; margin-bottom:8px; }
+        .modal-desc-sm { color:rgba(255,255,255,0.55); margin-bottom:8px; font-size:0.88rem; }
+        .modal-warn { font-size:0.85rem; color:rgba(255,82,82,0.8); }
+        .modal-hl   { color:#fff; }
+        .modal-code { color:#ffd740; }
+
+        /* chart column */
+        .chart-col  { flex:1; display:flex; flex-direction:column; cursor:default; }
+        .chart-bars { flex:1; display:flex; flex-direction:column; justify-content:flex-end; }
+        .chart-bar  { width:100%; background:rgba(66,165,245,0.55); border-radius:3px 3px 0 0;
+                      position:relative; overflow:hidden; transition:height 0.3s; }
+        .chart-bar-ok { position:absolute; bottom:0; width:100%; background:rgba(102,187,106,0.9);
+                        border-radius:3px 3px 0 0; }
+        .chart-lbl  { height:18px; display:flex; align-items:center; justify-content:center;
+                      font-size:0.58rem; white-space:nowrap; color:rgba(255,255,255,0.35); font-weight:400; }
+        .chart-lbl-now { color:#fff; font-weight:700; }
     </style>
 </head>
 <body>
 <div class="container">
 
     <!-- ====== LOGIN ====== -->
-    <div id="loginForm" class="glass" style="display:none; max-width:400px; margin:10vh auto 0; padding:2.5rem; text-align:center;">
+    <div id="loginForm" class="glass">
         <h1>🔐 Admin Login</h1>
         <input type="password" id="adminPassword" class="login-input" placeholder="Admin password">
         <label class="remember-label">
@@ -585,14 +644,14 @@
         </label>
         <button id="loginBtn" class="btn btn-primary btn-full">Sign In</button>
         {% if oidc_enabled %}
-        <div style="margin:1.2rem 0; color:rgba(255,255,255,0.28); font-size:0.85rem;">— or —</div>
+        <div class="sso-divider">— or —</div>
         <a href="/login" class="btn btn-ghost btn-full">Login with SSO</a>
         {% endif %}
-        <div id="loginError" style="color:#ff5252; margin-top:1rem; font-size:0.88rem; display:none;"></div>
+        <div id="loginError"></div>
     </div>
 
     <!-- ====== DASHBOARD ====== -->
-    <div id="dashboard" style="display:none;">
+    <div id="dashboard">
 
         <!-- Header -->
         <div class="glass dash-header">
@@ -621,7 +680,7 @@
         </div>
 
         <!-- Leaderboard -->
-        <div class="glass leaderboard" id="leaderboardSection" style="display:none;">
+        <div class="glass leaderboard" id="leaderboardSection">
             <div class="section-title">🏆 Top Users — Times Used</div>
             <div id="leaderboardRows"></div>
         </div>
@@ -660,7 +719,7 @@
                             <option value="FAILURE">Failure</option>
                         </select>
                     </div>
-                    <div style="flex:1;"></div>
+                    <div class="ctrl-spacer"></div>
                     <button id="btnRefreshLogs" class="btn btn-success btn-sm">↺ Refresh</button>
                     <button id="btnClearAll" class="btn btn-danger btn-sm">🗑 Clear Logs</button>
                 </div>
@@ -686,12 +745,12 @@
         </div>
 
         <!-- Users Tab -->
-        <div id="usersTab" style="display:none;">
+        <div id="usersTab">
             <div class="glass panel">
                 <div class="section-hd">
                     <h2>👥 User Management</h2>
-                    <div style="display:flex; gap:8px;">
-                        <button id="btnMigrateAll" class="btn btn-purple btn-sm" style="display:none;">⬇ Migrate All</button>
+                    <div class="user-action-row">
+                        <button id="btnMigrateAll" class="btn btn-purple btn-sm">⬇ Migrate All</button>
                         <button id="btnAddUser" class="btn btn-primary btn-sm">＋ Add User</button>
                     </div>
                 </div>
@@ -719,16 +778,16 @@
         </div>
 
         <!-- Activity Tab -->
-        <div id="activityTab" style="display:none;">
+        <div id="activityTab">
             <div class="glass panel">
-                <div class="section-hd" style="margin-bottom:1.4rem;">
+                <div class="section-hd section-hd-mb">
                     <h2>🕐 Activity by Hour</h2>
-                    <div style="display:flex; gap:14px; align-items:center; font-size:0.8rem; color:rgba(255,255,255,0.45);">
-                        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#42a5f5;margin-right:5px;vertical-align:middle;"></span>All</span>
-                        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#66bb6a;margin-right:5px;vertical-align:middle;"></span>Successful</span>
+                    <div class="chart-legend">
+                        <span><span class="legend-dot legend-dot-all"></span>All</span>
+                        <span><span class="legend-dot legend-dot-ok"></span>Successful</span>
                     </div>
                 </div>
-                <div id="hourlyChart" style="display:flex; align-items:stretch; gap:2px; height:160px;"></div>
+                <div id="hourlyChart"></div>
             </div>
         </div>
 
@@ -906,21 +965,26 @@
         const sorted = [...active].sort((a, b) => (b.times_used || 0) - (a.times_used || 0)).slice(0, 8);
         const maxCount = sorted.length ? sorted[0].times_used : 1;
 
+        const lbSection = document.getElementById('leaderboardSection');
+        const lbRows = document.getElementById('leaderboardRows');
         if (sorted.length) {
-            document.getElementById('leaderboardSection').style.display = 'block';
-            document.getElementById('leaderboardRows').innerHTML = sorted.map((u, i) => {
+            lbSection.style.display = 'block';
+            lbRows.innerHTML = '';
+            sorted.forEach((u, i) => {
                 const rankCls = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-n';
                 const cnt = u.times_used || 0;
                 const pct = Math.round(cnt / maxCount * 100);
-                return `<div class="lb-row">
-                    <div class="rank ${rankCls}">${i + 1}</div>
+                const row = document.createElement('div');
+                row.className = 'lb-row';
+                row.innerHTML = `<div class="rank ${rankCls}">${i + 1}</div>
                     <div class="lb-name">${escapeHtml(u.username)}</div>
-                    <div class="lb-bar-wrap"><div class="lb-bar" style="width:${pct}%"></div></div>
-                    <div class="lb-count">${cnt}</div>
-                </div>`;
-            }).join('');
+                    <div class="lb-bar-wrap"><div class="lb-bar"></div></div>
+                    <div class="lb-count">${cnt}</div>`;
+                row.querySelector('.lb-bar').style.width = pct + '%';
+                lbRows.appendChild(row);
+            });
         } else {
-            document.getElementById('leaderboardSection').style.display = 'none';
+            lbSection.style.display = 'none';
         }
     }
 
@@ -990,16 +1054,16 @@
                     <button class="btn btn-danger btn-sm" data-action="delete" data-username="${escapeHtml(u.username)}">Delete</button>
                 `;
             } else {
-                actions = '<span style="font-size:0.8rem; color:rgba(255,255,255,0.3);">Config-only</span>';
+                actions = '<span class="cfg-only">Config-only</span>';
             }
             return `<tr>
-                <td style="font-weight:600;">${escapeHtml(u.username)}</td>
+                <td class="td-user">${escapeHtml(u.username)}</td>
                 <td>${activeBadge}</td>
                 <td>${srcBadge}</td>
-                <td style="font-size:0.8rem; color:rgba(255,255,255,0.5);">${created}</td>
-                <td style="font-size:0.8rem; color:rgba(255,255,255,0.5);">${lastUsed}</td>
-                <td style="font-weight:700; color:#64b5f6;">${uses}</td>
-                <td><div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">${actions}</div></td>
+                <td class="td-date">${created}</td>
+                <td class="td-date">${lastUsed}</td>
+                <td class="td-uses">${uses}</td>
+                <td><div class="td-acts">${actions}</div></td>
             </tr>`;
         }).join('');
 
@@ -1007,7 +1071,7 @@
             cards.innerHTML = users.map(u => {
                 const lastUsed = u.last_used_at ? `<span title="${new Date(u.last_used_at).toLocaleString()}">${timeAgo(u.last_used_at)}</span>` : '—';
                 const actions = u.can_edit ? `
-                    <div style="display:flex; gap:7px; flex-wrap:wrap; margin-top:10px;">
+                    <div class="mc-actions">
                         <button class="btn btn-purple btn-sm" data-action="edit" data-username="${escapeHtml(u.username)}">Edit</button>
                         <button class="btn ${u.active ? 'btn-teal' : 'btn-success'} btn-sm"
                                 data-action="toggle" data-username="${escapeHtml(u.username)}" data-active="${!u.active}">
@@ -1017,13 +1081,13 @@
                     </div>` : '';
                 return `<div class="glass mobile-card">
                     <div class="mobile-card-hd">
-                        <strong style="color:#fff;">${escapeHtml(u.username)}</strong>
+                        <strong class="mc-name">${escapeHtml(u.username)}</strong>
                         ${u.active ? '<span class="badge badge-active">Active</span>' : '<span class="badge badge-inactive">Inactive</span>'}
                     </div>
                     <div class="mobile-card-body">
                         <div class="mrow"><span class="mlabel">Source</span><span class="mvalue">${escapeHtml(u.source||'store')}</span></div>
-                        <div class="mrow"><span class="mlabel">Uses</span><span class="mvalue" style="color:#64b5f6; font-weight:700;">${u.times_used||0}</span></div>
-                        <div class="mrow"><span class="mlabel">Last Used</span><span class="mvalue" style="font-size:0.8rem;">${lastUsed}</span></div>
+                        <div class="mrow"><span class="mlabel">Uses</span><span class="mvalue mc-uses">${u.times_used||0}</span></div>
+                        <div class="mrow"><span class="mlabel">Last Used</span><span class="mvalue mc-small">${lastUsed}</span></div>
                     </div>
                     ${actions}
                 </div>`;
@@ -1076,11 +1140,11 @@
                 ? '<span class="badge badge-success">Success</span>'
                 : '<span class="badge badge-failure">Failure</span>';
             return `<tr>
-                <td style="font-size:0.8rem; color:rgba(255,255,255,0.6); white-space:nowrap;">${ts}</td>
-                <td style="font-family:monospace; font-size:0.84rem; color:rgba(255,255,255,0.65);">${escapeHtml(log.ip||'')}</td>
-                <td style="font-weight:600;">${escapeHtml(log.user||'Unknown')}</td>
+                <td class="td-ts">${ts}</td>
+                <td class="td-ip">${escapeHtml(log.ip||'')}</td>
+                <td class="td-user">${escapeHtml(log.user||'Unknown')}</td>
                 <td>${badge}</td>
-                <td style="font-size:0.83rem; color:rgba(255,255,255,0.6);">${escapeHtml(log.details||'—')}</td>
+                <td class="td-det">${escapeHtml(log.details||'—')}</td>
             </tr>`;
         }).join('');
 
@@ -1092,12 +1156,12 @@
                     : '<span class="badge badge-failure">Failure</span>';
                 return `<div class="glass mobile-card">
                     <div class="mobile-card-hd">
-                        <strong style="color:#fff;">${escapeHtml(log.user||'Unknown')}</strong>
+                        <strong class="mc-name">${escapeHtml(log.user||'Unknown')}</strong>
                         ${badge}
                     </div>
                     <div class="mobile-card-body">
-                        <div class="mrow"><span class="mlabel">Time</span><span class="mvalue" style="font-size:0.78rem;">${ts}</span></div>
-                        <div class="mrow"><span class="mlabel">IP</span><span class="mvalue" style="font-family:monospace;">${escapeHtml(log.ip||'')}</span></div>
+                        <div class="mrow"><span class="mlabel">Time</span><span class="mvalue mc-tinyts">${ts}</span></div>
+                        <div class="mrow"><span class="mlabel">IP</span><span class="mvalue mc-mono">${escapeHtml(log.ip||'')}</span></div>
                         <div class="mrow"><span class="mlabel">Details</span><span class="mvalue">${escapeHtml(log.details||'—')}</span></div>
                     </div>
                 </div>`;
@@ -1143,28 +1207,38 @@
         const BAR_H   = 160 - LABEL_H; // px available for bars
 
         const wrap = document.getElementById('hourlyChart');
-        wrap.innerHTML = counts.map((cnt, h) => {
+        wrap.innerHTML = '';
+        counts.forEach((cnt, h) => {
             const barPx  = Math.round(cnt / maxVal * BAR_H);
             const succPx = cnt > 0 ? Math.round(successes[h] / cnt * barPx) : 0;
             const isNow  = h === nowHour;
-            return `<div title="${labels[h]}: ${cnt} total, ${successes[h]} successful"
-                style="flex:1; display:flex; flex-direction:column; cursor:default;">
-                <div style="flex:1; display:flex; flex-direction:column; justify-content:flex-end;">
-                    <div style="width:100%; height:${barPx}px; background:rgba(66,165,245,0.55);
-                        border-radius:3px 3px 0 0; position:relative; overflow:hidden;
-                        transition:height 0.3s;">
-                        <div style="position:absolute; bottom:0; width:100%; height:${succPx}px;
-                            background:rgba(102,187,106,0.9); border-radius:3px 3px 0 0;"></div>
-                    </div>
-                </div>
-                <div style="height:${LABEL_H}px; display:flex; align-items:center;
-                    justify-content:center; font-size:0.58rem; white-space:nowrap;
-                    color:${isNow ? '#fff' : 'rgba(255,255,255,0.35)'};
-                    font-weight:${isNow ? '700' : '400'};">
-                    ${labels[h]}
-                </div>
-            </div>`;
-        }).join('');
+
+            const col = document.createElement('div');
+            col.className = 'chart-col';
+            col.title = `${labels[h]}: ${cnt} total, ${successes[h]} successful`;
+
+            const barsWrap = document.createElement('div');
+            barsWrap.className = 'chart-bars';
+
+            const bar = document.createElement('div');
+            bar.className = 'chart-bar';
+            bar.style.height = barPx + 'px';
+
+            const barOk = document.createElement('div');
+            barOk.className = 'chart-bar-ok';
+            barOk.style.height = succPx + 'px';
+
+            bar.appendChild(barOk);
+            barsWrap.appendChild(bar);
+
+            const lbl = document.createElement('div');
+            lbl.className = 'chart-lbl' + (isNow ? ' chart-lbl-now' : '');
+            lbl.textContent = labels[h];
+
+            col.appendChild(barsWrap);
+            col.appendChild(lbl);
+            wrap.appendChild(col);
+        });
     }
 
     // ====== MODALS ======
@@ -1174,12 +1248,12 @@
         const card = document.createElement('div');
         card.className = 'glass modal-card';
         card.innerHTML = `
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
-                <h3 style="margin:0; color:#fff; font-size:1.05rem;">${title}</h3>
-                <button id="modalCloseBtn" class="btn btn-ghost btn-sm" style="padding:4px 9px;">✕</button>
+            <div class="modal-hd">
+                <h3 class="modal-title">${title}</h3>
+                <button id="modalCloseBtn" class="btn btn-ghost btn-sm modal-close">✕</button>
             </div>
             <div class="modal-body">${fieldsHtml}</div>
-            <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:1.2rem;">
+            <div class="modal-ft">
                 <button id="modalCancel" class="btn btn-ghost btn-sm">Cancel</button>
                 <button id="modalOk" class="btn btn-primary btn-sm">Confirm</button>
             </div>
@@ -1233,8 +1307,8 @@
 
     function openEditUser(username) {
         showModal('Edit User', `
-            <div style="color:rgba(255,255,255,0.55); margin-bottom:8px; font-size:0.88rem;">
-                Update PIN for <strong style="color:#fff;">${escapeHtml(username)}</strong>
+            <div class="modal-desc-sm">
+                Update PIN for <strong class="modal-hl">${escapeHtml(username)}</strong>
             </div>
             <label class="modal-field-label">New PIN (optional)</label>
             <input id="um_newpin" class="modal-input" type="password" inputmode="numeric" pattern="[0-9]*" placeholder="leave blank to keep current">
@@ -1285,10 +1359,10 @@
 
     function deleteUser(username) {
         showModal(`Delete user "${escapeHtml(username)}"`, `
-            <div style="color:rgba(255,255,255,0.65); font-size:0.9rem; margin-bottom:8px;">
-                Permanently delete <strong style="color:#fff;">${escapeHtml(username)}</strong> and all their access data.
+            <div class="modal-desc">
+                Permanently delete <strong class="modal-hl">${escapeHtml(username)}</strong> and all their access data.
             </div>
-            <div style="font-size:0.85rem; color:rgba(255,82,82,0.8);">This action cannot be undone.</div>
+            <div class="modal-warn">This action cannot be undone.</div>
         `, async () => { await _doDeleteUser(username); });
     }
 
@@ -1311,10 +1385,10 @@
 
     function openMigrateAll(btnId) {
         showModal('Migrate All Users', `
-            <div style="color:rgba(255,255,255,0.65); margin-bottom:8px; font-size:0.9rem;">
-                This will migrate all users from <code style="color:#ffd740;">config.ini</code> [pins] to the JSON user store using their existing PINs.
+            <div class="modal-desc">
+                This will migrate all users from <code class="modal-code">config.ini</code> [pins] to the JSON user store using their existing PINs.
             </div>
-            <div style="font-size:0.85rem; color:rgba(255,82,82,0.8);">This action cannot be undone.</div>
+            <div class="modal-warn">This action cannot be undone.</div>
         `, async () => { await migrateAll(btnId); });
     }
 
@@ -1342,10 +1416,10 @@
 
     function openClearAll(btnId) {
         showModal('Clear All Logs', `
-            <div style="color:rgba(255,255,255,0.65); margin-bottom:8px; font-size:0.9rem;">
+            <div class="modal-desc">
                 This will permanently remove all log entries.
             </div>
-            <div style="font-size:0.85rem; color:rgba(255,82,82,0.8);">This action cannot be undone.</div>
+            <div class="modal-warn">This action cannot be undone.</div>
         `, async () => { await clearLogs('all', btnId); });
     }
 
