@@ -21,7 +21,7 @@ services:
     restart: unless-stopped
 
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${DOOROPENER_PORT:-6532}/"]
+      test: ["CMD", "curl", "-f", "http://localhost:${DOOROPENER_PORT:-6532}/health"]
       interval: 1m
       timeout: 10s
       retries: 3
