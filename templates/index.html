@@ -545,17 +545,11 @@
             left: 50%;
             transform: translateX(-50%) translateY(-20px) scale(0.92);
             z-index: 10;
-            background: rgba(0, 0, 0, 0.52);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            font-size: 1.5rem;
-            font-weight: 700;
             padding: 14px 30px;
-            border-radius: 16px;
-            letter-spacing: 0.04em;
             pointer-events: none;
             opacity: 0;
-            white-space: nowrap;
             transition: opacity 0.28s cubic-bezier(.4, 0, .2, 1), transform 0.28s cubic-bezier(.4, 0, .2, 1);
         }
 
@@ -565,14 +559,21 @@
         }
 
         .access-popup.denied {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
             color: #ff3b3b;
-            box-shadow: 0 0 28px rgba(255, 59, 59, 0.4), 0 0 64px rgba(255, 59, 59, 0.15), inset 0 0 24px rgba(255, 59, 59, 0.07);
-            text-shadow: 0 0 14px rgba(255, 59, 59, 0.95), 0 0 36px rgba(255, 59, 59, 0.45);
+            background: rgba(18, 0, 0, 0.93);
+            border: 1px solid rgba(255, 59, 59, 0.6);
+            border-radius: 3px;
+            box-shadow: 0 0 28px rgba(255, 59, 59, 0.4), 0 0 64px rgba(255, 59, 59, 0.12), inset 0 0 18px rgba(255, 59, 59, 0.06);
+            text-shadow: 0 0 7px #ff3b3b, 0 0 18px rgba(255, 59, 59, 0.55);
+            overflow: hidden;
         }
 
-        .access-popup.denied::before {
-            content: '✕  ';
-        }
+        .access-popup.denied::before { content: ''; }
 
         .access-popup.granted {
             font-family: 'Courier New', Courier, monospace;
@@ -1004,7 +1005,7 @@
         <!-- Submission loading overlay -->
         <div id="submit-overlay"></div>
         <!-- Access popups -->
-        <div id="accessDeniedPopup" class="access-popup denied">Access Denied</div>
+        <div id="accessDeniedPopup" class="access-popup denied"></div>
         <div id="accessGrantedPopup" class="access-popup granted">Access Granted</div>
         {% if page_title %}
         <div id="page-title">{{ page_title }}</div>
@@ -1304,9 +1305,6 @@
                         if ((status === 429 || status === 401) && data && data.blocked_until) {
                             startBlockCountdown(data.blocked_until);
                         }
-                        // Error (invalid PIN, blocked, etc)
-                        showStatus('Error: ' + data.message, 'error');
-
                         // Change button to red cross on failure
                         submitBtn.classList.remove('submitting');
                         submitBtn.style.background = 'linear-gradient(135deg, #dc3545, #c82333)';
@@ -1314,7 +1312,7 @@
 
                         // Play failure sound and enhanced vibration
                         playFailureSound();
-                        showAccessPopup('accessDeniedPopup');
+                        showAccessPopup('accessDeniedPopup', null, data && data.message ? data.message : 'Access Denied');
                         flashContainer('deny');
                         if (window.navigator.vibrate) {
                             // Enhanced failure vibration pattern: strong buzz with pauses
@@ -1371,12 +1369,11 @@
                         if ((status === 429 || status === 401) && data && data.blocked_until) {
                             startBlockCountdown(data.blocked_until);
                         }
-                        showStatus('Error: ' + (data && data.message ? data.message : 'Unknown error'), 'error');
                         const submitBtn = document.getElementById('submitBtn');
                         submitBtn.style.background = 'linear-gradient(135deg, #dc3545, #c82333)';
                         submitBtn.textContent = '✗';
                         playFailureSound();
-                        showAccessPopup('accessDeniedPopup');
+                        showAccessPopup('accessDeniedPopup', null, data && data.message ? data.message : 'Access Denied');
                         flashContainer('deny');
                         if (window.navigator.vibrate) window.navigator.vibrate([200, 100, 200, 100, 300]);
                     }
@@ -1620,7 +1617,7 @@
             setTimeout(() => c.classList.remove('flash-grant', 'flash-deny'), 1400);
         }
 
-        function showAccessPopup(id, name) {
+        function showAccessPopup(id, name, errorMsg) {
             const popup = document.getElementById(id);
             if (!popup) return;
             clearInterval(popup._typeInterval);
@@ -1641,7 +1638,6 @@
                     if (i >= line1.length) {
                         clearInterval(popup._typeInterval);
                         if (line2) {
-                            // brief pause then type second line
                             setTimeout(() => {
                                 let j = 0;
                                 popup.innerHTML = '<span class="scan-line"></span>' + line1 + '<br>' + '_';
@@ -1663,16 +1659,44 @@
                         }
                     }
                 }, 48);
+            } else if (id === 'accessDeniedPopup') {
+                const line1 = '✕ ACCESS_DENIED';
+                const line2 = errorMsg ? '> ' + errorMsg.toUpperCase() : null;
+                let i = 0;
+                popup.innerHTML = '_';
+                popup._typeInterval = setInterval(() => {
+                    i++;
+                    popup.innerHTML = line1.slice(0, i) + '_';
+                    if (i >= line1.length) {
+                        clearInterval(popup._typeInterval);
+                        if (line2) {
+                            setTimeout(() => {
+                                let j = 0;
+                                popup.innerHTML = line1 + '<br>_';
+                                popup._typeInterval = setInterval(() => {
+                                    j++;
+                                    popup.innerHTML = line1 + '<br>' + line2.slice(0, j) + '_';
+                                    if (j >= line2.length) {
+                                        clearInterval(popup._typeInterval);
+                                        popup.innerHTML = line1 + '<br>' + line2;
+                                    }
+                                }, 35);
+                            }, 120);
+                        } else {
+                            popup.innerHTML = line1;
+                        }
+                    }
+                }, 40);
             }
 
-            const hideDelay = id === 'accessGrantedPopup' ? 2800 : 1700;
+            const hideDelay = id === 'accessGrantedPopup' ? 2800 : 2200;
             setTimeout(() => {
                 clearInterval(popup._typeInterval);
                 clearInterval(popup._blinkInterval);
                 popup.classList.remove('visible');
                 setTimeout(() => {
                     popup.style.display = 'none';
-                    if (id === 'accessGrantedPopup') popup.innerHTML = '';
+                    popup.innerHTML = '';
                 }, 400);
             }, hideDelay);
         }
