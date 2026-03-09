@@ -60,6 +60,7 @@ def reset_app_globals(monkeypatch):
     Only runs if app.py is already loaded — tests that never import app are unaffected.
     """
     import sys
+
     if "app" not in sys.modules:
         return
 
