@@ -489,7 +489,7 @@
         <label class="remember-label">
             <input type="checkbox" id="rememberMe"> Remember me for 30 days
         </label>
-        <button onclick="login()" class="btn btn-primary btn-full">Sign In</button>
+        <button id="loginBtn" class="btn btn-primary btn-full">Sign In</button>
         {% if oidc_enabled %}
         <div style="margin:1.2rem 0; color:rgba(255,255,255,0.28); font-size:0.85rem;">— or —</div>
         <a href="/login" class="btn btn-ghost btn-full">Login with SSO</a>
@@ -504,7 +504,7 @@
         <!-- Header -->
         <div class="glass dash-header">
             <h1>🔐 Admin Dashboard</h1>
-            <button onclick="logout()" class="btn btn-danger btn-sm">Logout</button>
+            <button id="logoutBtn" class="btn btn-danger btn-sm">Logout</button>
         </div>
 
         <!-- Stats -->
@@ -535,9 +535,9 @@
 
         <!-- Tabs -->
         <div class="tabs">
-            <button id="tabLogsBtn" class="tab-btn active" onclick="switchTab('logs')">📋 Access Logs</button>
-            <button id="tabUsersBtn" class="tab-btn" onclick="switchTab('users')">👥 Users</button>
-            <button id="tabActivityBtn" class="tab-btn" onclick="switchTab('activity')">📊 Activity</button>
+            <button id="tabLogsBtn" class="tab-btn active">📋 Access Logs</button>
+            <button id="tabUsersBtn" class="tab-btn">👥 Users</button>
+            <button id="tabActivityBtn" class="tab-btn">📊 Activity</button>
         </div>
 
         <!-- Logs Tab -->
@@ -546,7 +546,7 @@
                 <div class="controls">
                     <div class="ctrl-group">
                         <span class="ctrl-label">Sort</span>
-                        <select id="sortBy" onchange="sortLogs()">
+                        <select id="sortBy">
                             <option value="time">Newest first</option>
                             <option value="time_asc">Oldest first</option>
                             <option value="user">User</option>
@@ -555,21 +555,21 @@
                     </div>
                     <div class="ctrl-group">
                         <span class="ctrl-label">User</span>
-                        <select id="filterUser" onchange="filterLogs()">
+                        <select id="filterUser">
                             <option value="">All</option>
                         </select>
                     </div>
                     <div class="ctrl-group">
                         <span class="ctrl-label">Status</span>
-                        <select id="filterStatus" onchange="filterLogs()">
+                        <select id="filterStatus">
                             <option value="">All</option>
                             <option value="SUCCESS">Success</option>
                             <option value="FAILURE">Failure</option>
                         </select>
                     </div>
                     <div style="flex:1;"></div>
-                    <button class="btn btn-success btn-sm" onclick="loadLogs()">↺ Refresh</button>
-                    <button id="btnClearAll" class="btn btn-danger btn-sm" onclick="openClearAll('btnClearAll')">🗑 Clear Logs</button>
+                    <button id="btnRefreshLogs" class="btn btn-success btn-sm">↺ Refresh</button>
+                    <button id="btnClearAll" class="btn btn-danger btn-sm">🗑 Clear Logs</button>
                 </div>
 
                 <div id="logContainer" class="table-wrap">
@@ -598,8 +598,8 @@
                 <div class="section-hd">
                     <h2>👥 User Management</h2>
                     <div style="display:flex; gap:8px;">
-                        <button id="btnMigrateAll" class="btn btn-purple btn-sm" onclick="openMigrateAll('btnMigrateAll')" style="display:none;">⬇ Migrate All</button>
-                        <button class="btn btn-primary btn-sm" onclick="openAddUser()">＋ Add User</button>
+                        <button id="btnMigrateAll" class="btn btn-purple btn-sm" style="display:none;">⬇ Migrate All</button>
+                        <button id="btnAddUser" class="btn btn-primary btn-sm">＋ Add User</button>
                     </div>
                 </div>
 
@@ -728,9 +728,39 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         checkAuthentication();
-        document.getElementById('adminPassword').addEventListener('keypress', e => {
-            if (e.key === 'Enter') login();
+
+        // Auth
+        document.getElementById('loginBtn').addEventListener('click', login);
+        document.getElementById('adminPassword').addEventListener('keypress', e => { if (e.key === 'Enter') login(); });
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+
+        // Tabs
+        document.getElementById('tabLogsBtn').addEventListener('click', () => switchTab('logs'));
+        document.getElementById('tabUsersBtn').addEventListener('click', () => switchTab('users'));
+        document.getElementById('tabActivityBtn').addEventListener('click', () => switchTab('activity'));
+
+        // Log controls
+        document.getElementById('sortBy').addEventListener('change', sortLogs);
+        document.getElementById('filterUser').addEventListener('change', filterLogs);
+        document.getElementById('filterStatus').addEventListener('change', filterLogs);
+        document.getElementById('btnRefreshLogs').addEventListener('click', loadLogs);
+        document.getElementById('btnClearAll').addEventListener('click', () => openClearAll('btnClearAll'));
+
+        // User controls
+        document.getElementById('btnMigrateAll').addEventListener('click', () => openMigrateAll('btnMigrateAll'));
+        document.getElementById('btnAddUser').addEventListener('click', openAddUser);
+
+        // Event delegation for dynamically rendered user action buttons
+        document.getElementById('dashboard').addEventListener('click', e => {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            const action = btn.dataset.action;
+            const username = btn.dataset.username;
+            if (action === 'edit') openEditUser(username);
+            else if (action === 'toggle') toggleActive(username, btn.dataset.active === 'true');
+            else if (action === 'delete') deleteUser(username);
         });
+
         checkForUpdate("{{ app_version }}");
     });
 
@@ -851,12 +881,12 @@
             let actions = '';
             if (u.can_edit) {
                 actions = `
-                    <button class="btn btn-purple btn-sm" onclick="openEditUser('${escapeHtml(u.username)}')">Edit</button>
+                    <button class="btn btn-purple btn-sm" data-action="edit" data-username="${escapeHtml(u.username)}">Edit</button>
                     <button class="btn ${u.active ? 'btn-teal' : 'btn-success'} btn-sm"
-                            onclick="toggleActive('${escapeHtml(u.username)}', ${!u.active})">
+                            data-action="toggle" data-username="${escapeHtml(u.username)}" data-active="${!u.active}">
                         ${u.active ? 'Deactivate' : 'Activate'}
                     </button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteUser('${escapeHtml(u.username)}')">Delete</button>
+                    <button class="btn btn-danger btn-sm" data-action="delete" data-username="${escapeHtml(u.username)}">Delete</button>
                 `;
             } else {
                 actions = '<span style="font-size:0.8rem; color:rgba(255,255,255,0.3);">Config-only</span>';
@@ -877,12 +907,12 @@
                 const lastUsed = u.last_used_at ? `<span title="${new Date(u.last_used_at).toLocaleString()}">${timeAgo(u.last_used_at)}</span>` : '—';
                 const actions = u.can_edit ? `
                     <div style="display:flex; gap:7px; flex-wrap:wrap; margin-top:10px;">
-                        <button class="btn btn-purple btn-sm" onclick="openEditUser('${escapeHtml(u.username)}')">Edit</button>
+                        <button class="btn btn-purple btn-sm" data-action="edit" data-username="${escapeHtml(u.username)}">Edit</button>
                         <button class="btn ${u.active ? 'btn-teal' : 'btn-success'} btn-sm"
-                                onclick="toggleActive('${escapeHtml(u.username)}', ${!u.active})">
+                                data-action="toggle" data-username="${escapeHtml(u.username)}" data-active="${!u.active}">
                             ${u.active ? 'Deactivate' : 'Activate'}
                         </button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteUser('${escapeHtml(u.username)}')">Delete</button>
+                        <button class="btn btn-danger btn-sm" data-action="delete" data-username="${escapeHtml(u.username)}">Delete</button>
                     </div>` : '';
                 return `<div class="glass mobile-card">
                     <div class="mobile-card-hd">
