@@ -63,9 +63,7 @@ class UsersStore:
             except PermissionError:
                 continue
         else:
-            raise PermissionError(
-                f"Cannot create temp file in {dir_path} or {tempfile.gettempdir()}"
-            )
+            raise PermissionError(f"Cannot create temp file in {dir_path} or {tempfile.gettempdir()}")
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as f:
                 json.dump(self.data, f, ensure_ascii=False, indent=2)
