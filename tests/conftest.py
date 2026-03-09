@@ -53,6 +53,25 @@ def setup_mocks():
         yield
 
 
+@pytest.fixture(autouse=True)
+def reset_app_globals(monkeypatch):
+    """Reset all mutable app-level globals before each test to prevent state leakage."""
+    import app as app_module
+    from collections import defaultdict
+
+    monkeypatch.setattr(app_module, "ip_failed_attempts", defaultdict(int))
+    monkeypatch.setattr(app_module, "ip_blocked_until", defaultdict(lambda: None))
+    monkeypatch.setattr(app_module, "session_failed_attempts", defaultdict(int))
+    monkeypatch.setattr(app_module, "session_blocked_until", defaultdict(lambda: None))
+    monkeypatch.setattr(app_module, "global_failed_attempts", 0)
+    monkeypatch.setattr(app_module, "global_last_reset", app_module.get_current_time())
+    monkeypatch.setattr(app_module, "user_pins", {})
+    monkeypatch.setattr(app_module, "oauth", None)
+    monkeypatch.setattr(app_module, "test_mode", True)
+    monkeypatch.setattr(app_module, "require_pin_for_oidc", False)
+    monkeypatch.setattr(app_module, "oidc_user_group", "")
+
+
 @pytest.fixture
 def client():
     """Create test client with test configuration."""
