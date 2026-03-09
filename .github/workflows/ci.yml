@@ -10,30 +10,18 @@ on:
 
 jobs:
   tests:
-    name: Tests (pytest + coverage) / Python ${{ matrix.python-version }}
+    name: Tests (pytest + coverage)
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.12"]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v5
         with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-${{ matrix.python-version }}-
+          python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt pytest-cov
+        run: uv pip install --system -r requirements.txt pytest-cov
 
       - name: Prepare test config and env
         run: |
@@ -77,47 +65,17 @@ jobs:
           pytest --maxfail=1 --disable-warnings -q --cov=./ --cov-report=term-missing --cov-fail-under=75
 
 
-
-  lint:
-    name: Lint (ruff)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-ruff
-          restore-keys: ${{ runner.os }}-pip-ruff
-
-      - name: Install Ruff
-        run: pip install ruff
-
-      - name: Run ruff
-        run: |
-          ruff check .
-          ruff format --check .
-
-
   pre-commit:
     name: Pre-commit hooks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Run pre-commit
-        uses: pre-commit/action@v3.0.1
+      - uses: pre-commit/action@v3.0.1
 
 
   bandit:
@@ -126,20 +84,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.12"
 
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-bandit
-          restore-keys: ${{ runner.os }}-pip-bandit
-
       - name: Install Bandit
-        run: pip install bandit
+        run: uv pip install --system bandit
 
       - name: Run bandit
         run: bandit -c pyproject.toml -r .
