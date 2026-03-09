@@ -282,14 +282,7 @@ def test_admin_users_migrate_single(mock_users_store, monkeypatch):
     config_pins = {"configuser": "1234"}
     monkeypatch.setattr(app_module, "user_pins", config_pins)
 
-    mock_config = MagicMock()
-    mock_config.remove_option.return_value = None
-    mock_config.write = MagicMock()
-
-    with (
-        patch("configparser.ConfigParser", return_value=mock_config),
-        patch("builtins.open", MagicMock()),
-    ):
+    with patch("app.save_config"):
         c = client_app()
         _admin_session(c)
 
@@ -299,12 +292,12 @@ def test_admin_users_migrate_single(mock_users_store, monkeypatch):
         data = response.get_json()
         assert data["status"] == "migrated"
 
-        # Verify user was created in JSON store
-        users = mock_users_store.list_users()["users"]
-        assert len(users) == 1
-        user = users[0]
-        assert user["username"] == "configuser"
-        assert user["times_used"] == 0
+    # Verify user was created in JSON store
+    users = mock_users_store.list_users()["users"]
+    assert len(users) == 1
+    user = users[0]
+    assert user["username"] == "configuser"
+    assert user["times_used"] == 0
 
 
 def test_admin_users_migrate_all(mock_users_store, monkeypatch):
@@ -315,14 +308,7 @@ def test_admin_users_migrate_all(mock_users_store, monkeypatch):
     config_pins = {"user1": "1111", "user2": "2222", "user3": "3333"}
     monkeypatch.setattr(app_module, "user_pins", config_pins)
 
-    mock_config = MagicMock()
-    mock_config.remove_option.return_value = None
-    mock_config.write = MagicMock()
-
-    with (
-        patch("configparser.ConfigParser", return_value=mock_config),
-        patch("builtins.open", MagicMock()),
-    ):
+    with patch("app.save_config"):
         c = client_app()
         _admin_session(c)
 
@@ -333,11 +319,11 @@ def test_admin_users_migrate_all(mock_users_store, monkeypatch):
         assert data["migrated"] == 3
         assert data["failed"] == []
 
-        # Verify all users were created in JSON store
-        users = mock_users_store.list_users()["users"]
-        assert len(users) == 3
-        usernames = {u["username"] for u in users}
-        assert usernames == {"user1", "user2", "user3"}
+    # Verify all users were created in JSON store
+    users = mock_users_store.list_users()["users"]
+    assert len(users) == 3
+    usernames = {u["username"] for u in users}
+    assert usernames == {"user1", "user2", "user3"}
 
 
 def test_admin_users_migrate_all_no_config_users(mock_users_store, monkeypatch):

@@ -28,11 +28,8 @@ class UsersStore:
     def __init__(self, path: str):
         self.path = path
         self.data: Dict[str, Any] = {"users": {}}
-        self._loaded = False
 
     def _load_file(self) -> None:
-        if self._loaded:
-            return
         try:
             if os.path.exists(self.path):
                 with open(self.path, "r", encoding="utf-8") as f:
@@ -46,8 +43,6 @@ class UsersStore:
         except Exception:
             # fallback to empty on any error
             self.data = {"users": {}}
-        finally:
-            self._loaded = True
 
     def _save_atomic(self) -> None:
         dir_path = os.path.dirname(self.path)
@@ -119,8 +114,7 @@ class UsersStore:
         return {"users": items}
 
     def _ensure_loaded(self):
-        if not self._loaded:
-            self._load_file()
+        self._load_file()
 
     @staticmethod
     def _validate_username(username: str) -> bool:

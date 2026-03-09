@@ -29,7 +29,6 @@ def test_users_store_initialization(users_store):
     """Test that UsersStore initializes correctly."""
     assert users_store.path
     assert users_store.data == {"users": {}}
-    assert not users_store._loaded
 
 
 def test_create_user(users_store):
