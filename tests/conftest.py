@@ -55,7 +55,14 @@ def setup_mocks():
 
 @pytest.fixture(autouse=True)
 def reset_app_globals(monkeypatch):
-    """Reset all mutable app-level globals before each test to prevent state leakage."""
+    """Reset all mutable app-level globals before each test to prevent state leakage.
+
+    Only runs if app.py is already loaded — tests that never import app are unaffected.
+    """
+    import sys
+    if "app" not in sys.modules:
+        return
+
     import app as app_module
     from collections import defaultdict
 
