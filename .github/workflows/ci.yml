@@ -22,9 +22,7 @@ jobs:
           enable-cache: true
 
       - name: Install dependencies
-        run: |
-          uv venv
-          uv pip install -r requirements.txt pytest-cov
+        run: uv pip install -r requirements.txt pytest-cov
 
       - name: Prepare test config and env
         run: |
