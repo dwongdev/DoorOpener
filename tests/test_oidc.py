@@ -37,6 +37,7 @@ def test_open_door_pinless_oidc_allowed(monkeypatch):
     import app as app_module
 
     # Ensure policy allows pinless open and test mode avoids HA calls
+    app_module.oauth = object()
     app_module.require_pin_for_oidc = False
     app_module.oidc_user_group = "dooropener-users"
     app_module.test_mode = True
@@ -85,6 +86,7 @@ def test_open_door_pinless_blocked_when_require_pin(monkeypatch):
 def test_open_door_pinless_expired_oidc(monkeypatch):
     import app as app_module
 
+    app_module.oauth = object()
     app_module.require_pin_for_oidc = False
     app_module.oidc_user_group = "dooropener-users"
     app_module.test_mode = True
