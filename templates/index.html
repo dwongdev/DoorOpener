@@ -735,6 +735,17 @@
             50%      { transform: translateY(30px); }
         }
 
+        /* Optional page title */
+        #page-title {
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 1rem;
+        }
+
         /* PIN display */
         #pinDisplay {
             width: 300px;
@@ -989,6 +1000,9 @@
         <!-- Access popups -->
         <div id="accessDeniedPopup" class="access-popup denied">Access Denied</div>
         <div id="accessGrantedPopup" class="access-popup granted">Access Granted</div>
+        {% if page_title %}
+        <div id="page-title">{{ page_title }}</div>
+        {% endif %}
         <!-- PIN Display -->
         <div id="pinDisplay">
             <span class="pin-placeholder">Enter PIN</span>

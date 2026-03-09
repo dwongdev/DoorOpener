@@ -387,6 +387,7 @@ def after_request(response):
 @app.route("/")
 def index():
     easter_egg_enabled = config.getboolean("server", "67mode", fallback=False)
+    page_title = config.get("server", "page_title", fallback="").strip()
     return render_template(
         "index.html",
         oidc_enabled=bool(oauth),
@@ -394,6 +395,7 @@ def index():
         easter_egg_enabled=easter_egg_enabled,
         app_version=APP_VERSION,
         csp_nonce=g.csp_nonce,
+        page_title=page_title,
     )
 
 
