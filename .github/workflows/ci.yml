@@ -33,9 +33,7 @@ jobs:
             ${{ runner.os }}-pip-${{ matrix.python-version }}-
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt pytest-cov
+        run: pip install -r requirements.txt pytest-cov
 
       - name: Prepare test config and env
         run: |
