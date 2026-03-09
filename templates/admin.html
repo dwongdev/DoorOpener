@@ -483,7 +483,7 @@
 <div class="container">
 
     <!-- ====== LOGIN ====== -->
-    <div id="loginForm" class="glass" style="max-width:400px; margin:10vh auto 0; padding:2.5rem; text-align:center;">
+    <div id="loginForm" class="glass" style="display:none; max-width:400px; margin:10vh auto 0; padding:2.5rem; text-align:center;">
         <h1>🔐 Admin Login</h1>
         <input type="password" id="adminPassword" class="login-input" placeholder="Admin password">
         <label class="remember-label">
@@ -707,8 +707,12 @@
             if (data.authenticated) {
                 if (data.csrf_token) csrfToken = data.csrf_token;
                 await showDashboard();
+            } else {
+                document.getElementById('loginForm').style.display = 'block';
             }
-        } catch (e) {}
+        } catch (e) {
+            document.getElementById('loginForm').style.display = 'block';
+        }
     }
 
     function logout() {
