@@ -50,9 +50,9 @@ APP_VERSION = "1.12.2"
 TZ = os.environ.get("TZ", "UTC")
 try:
     TIMEZONE = pytz.timezone(TZ)
-    print(f"Using timezone: {TZ}")
+    logging.getLogger("dooropener").info(f"Using timezone: {TZ}")
 except pytz.exceptions.UnknownTimeZoneError:
-    print(f"Unknown timezone '{TZ}', falling back to UTC")
+    logging.getLogger("dooropener").warning(f"Unknown timezone '{TZ}', falling back to UTC")
     TIMEZONE = pytz.UTC
     TZ = "UTC"
 
