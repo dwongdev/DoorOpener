@@ -19,9 +19,12 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.12"
+          enable-cache: true
 
       - name: Install dependencies
-        run: uv pip install --system -r requirements.txt pytest-cov
+        run: |
+          uv venv
+          uv pip install -r requirements.txt pytest-cov
 
       - name: Prepare test config and env
         run: |
@@ -62,7 +65,7 @@ jobs:
           CONFIG_INI: tests/config.ini
           DOTENV: tests/.env
         run: |
-          pytest --maxfail=1 --disable-warnings -q --cov=./ --cov-report=term-missing --cov-fail-under=75
+          uv run pytest --maxfail=1 --disable-warnings -q --cov=./ --cov-report=term-missing --cov-fail-under=75
 
 
   pre-commit:
@@ -85,11 +88,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: astral-sh/setup-uv@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install Bandit
-        run: uv pip install --system bandit
 
       - name: Run bandit
-        run: bandit -c pyproject.toml -r .
+        run: uvx bandit -c pyproject.toml -r .
