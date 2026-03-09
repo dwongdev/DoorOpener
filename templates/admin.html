@@ -402,6 +402,8 @@
         }
         .toast.success { background: rgba(20,80,28,0.94); color: #c8e6c9; }
         .toast.error   { background: rgba(160,20,20,0.94); color: #ffcdd2; }
+        .toast.info    { background: rgba(15,55,100,0.94); color: #bbdefb; }
+        .toast.info a  { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
         .toast.show    { opacity: 1; transform: translateY(0) scale(1); }
 
         /* === MODALS === */
@@ -729,6 +731,7 @@
         document.getElementById('adminPassword').addEventListener('keypress', e => {
             if (e.key === 'Enter') login();
         });
+        checkForUpdate("{{ app_version }}");
     });
 
     // ====== LOGS ======
@@ -1252,6 +1255,42 @@
         el.style.opacity = '0.6';
         el.textContent = label || 'Working…';
         return () => { el.disabled = false; el.style.opacity = ''; el.textContent = el.dataset.origLabel || orig; };
+    }
+
+    function _compareVersions(a, b) {
+        const pa = a.split('.').map(Number);
+        const pb = b.split('.').map(Number);
+        for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+            const diff = (pa[i] || 0) - (pb[i] || 0);
+            if (diff !== 0) return diff;
+        }
+        return 0;
+    }
+
+    function checkForUpdate(currentVersion) {
+        if (!currentVersion || sessionStorage.getItem('updateChecked')) return;
+        sessionStorage.setItem('updateChecked', '1');
+        fetch('https://api.github.com/repos/Sloth-on-meth/DoorOpener/releases/latest', { cache: 'no-store' })
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                if (!data || !data.tag_name) return;
+                const latest = data.tag_name.replace(/^v/, '');
+                if (_compareVersions(latest, currentVersion) > 0) {
+                    const container = document.getElementById('toast-container');
+                    if (!container) return;
+                    const t = document.createElement('div');
+                    t.className = 'toast info';
+                    const a = document.createElement('a');
+                    a.href = data.html_url || 'https://github.com/Sloth-on-meth/DoorOpener/releases';
+                    a.target = '_blank';
+                    a.rel = 'noopener noreferrer';
+                    a.textContent = `Update available: v${latest}`;
+                    t.appendChild(a);
+                    container.appendChild(t);
+                    setTimeout(() => t.classList.add('show'), 10);
+                }
+            })
+            .catch(() => {});
     }
 
     function showToast(message, type = 'success') {

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-DoorOpener Web Portal v1.11
----------------------------
+DoorOpener Web Portal v1.12.0
+------------------------------
 A secure Flask web app to open a door via Home Assistant API, with visual keypad interface,
 enhanced multi-layer security, timezone support, and comprehensive brute force protection.
 """
@@ -41,6 +41,8 @@ try:
     from authlib.jose import jwt
 except Exception:
     OAuth = None
+
+APP_VERSION = "1.12.0"
 
 # --- Timezone Setup ---
 # Get timezone from environment variable, default to UTC
@@ -382,6 +384,7 @@ def index():
         oidc_enabled=bool(oauth),
         require_pin_for_oidc=require_pin_for_oidc,
         easter_egg_enabled=easter_egg_enabled,
+        app_version=APP_VERSION,
     )
 
 
@@ -964,7 +967,7 @@ def open_door():
 
 @app.route("/admin")
 def admin():
-    return render_template("admin.html", oidc_enabled=bool(oauth))
+    return render_template("admin.html", oidc_enabled=bool(oauth), app_version=APP_VERSION)
 
 
 # --- OIDC (Authentik) Routes ---

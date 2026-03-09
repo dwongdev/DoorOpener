@@ -328,6 +328,20 @@
             color: #ff3b3b;
         }
 
+        .toast.info {
+            background: rgba(15, 55, 100, 0.94);
+            color: #bbdefb;
+        }
+        .toast.info::before {
+            content: '↑';
+            color: #64b5f6;
+        }
+        .toast.info a {
+            color: inherit;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
         .toast.show {
             opacity: 1;
             transform: translateX(0);
@@ -1288,6 +1302,42 @@
             }
         }
 
+        function _compareVersions(a, b) {
+            const pa = a.split('.').map(Number);
+            const pb = b.split('.').map(Number);
+            for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+                const diff = (pa[i] || 0) - (pb[i] || 0);
+                if (diff !== 0) return diff;
+            }
+            return 0;
+        }
+
+        function checkForUpdate(currentVersion) {
+            if (!currentVersion || sessionStorage.getItem('updateChecked')) return;
+            sessionStorage.setItem('updateChecked', '1');
+            fetch('https://api.github.com/repos/Sloth-on-meth/DoorOpener/releases/latest', { cache: 'no-store' })
+                .then(r => r.ok ? r.json() : null)
+                .then(data => {
+                    if (!data || !data.tag_name) return;
+                    const latest = data.tag_name.replace(/^v/, '');
+                    if (_compareVersions(latest, currentVersion) > 0) {
+                        const container = document.getElementById('toast-container');
+                        if (!container) return;
+                        const t = document.createElement('div');
+                        t.className = 'toast info';
+                        const a = document.createElement('a');
+                        a.href = data.html_url || 'https://github.com/Sloth-on-meth/DoorOpener/releases';
+                        a.target = '_blank';
+                        a.rel = 'noopener noreferrer';
+                        a.textContent = `Update available: v${latest}`;
+                        t.appendChild(a);
+                        container.appendChild(t);
+                        setTimeout(() => t.classList.add('show'), 10);
+                    }
+                })
+                .catch(() => {});
+        }
+
         function setKeypadDisabled(disabled) {
             document.querySelectorAll('.keypad-btn').forEach(btn => {
                 btn.disabled = disabled;
@@ -1467,6 +1517,9 @@
             // Initial battery level fetch, then refresh every 60 seconds
             fetchBatteryLevel();
             setInterval(fetchBatteryLevel, 60000);
+
+            // Check for a newer release on GitHub (non-blocking, once per session)
+            checkForUpdate("{{ app_version }}");
 
             // Query authentication status for OIDC UX
             fetch('/auth/status', { credentials: 'same-origin', cache: 'no-store' })
