@@ -996,29 +996,29 @@
 
         <!-- Keypad -->
         <div class="keypad">
-            <button class="keypad-btn" onclick="addDigit('1')">1</button>
-            <button class="keypad-btn" onclick="addDigit('2')">2</button>
-            <button class="keypad-btn" onclick="addDigit('3')">3</button>
-            <button class="keypad-btn" onclick="addDigit('4')">4</button>
-            <button class="keypad-btn" onclick="addDigit('5')">5</button>
-            <button class="keypad-btn" onclick="addDigit('6')">6</button>
-            <button class="keypad-btn" onclick="addDigit('7')">7</button>
-            <button class="keypad-btn" onclick="addDigit('8')">8</button>
-            <button class="keypad-btn" onclick="addDigit('9')">9</button>
-            <button class="keypad-btn clear-btn" onclick="clearPin()">⌫</button>
-            <button class="keypad-btn" onclick="addDigit('0')">0</button>
-            <button id="submitBtn" class="keypad-btn submit-btn" onclick="openDoor()">✓</button>
+            <button class="keypad-btn" data-digit="1">1</button>
+            <button class="keypad-btn" data-digit="2">2</button>
+            <button class="keypad-btn" data-digit="3">3</button>
+            <button class="keypad-btn" data-digit="4">4</button>
+            <button class="keypad-btn" data-digit="5">5</button>
+            <button class="keypad-btn" data-digit="6">6</button>
+            <button class="keypad-btn" data-digit="7">7</button>
+            <button class="keypad-btn" data-digit="8">8</button>
+            <button class="keypad-btn" data-digit="9">9</button>
+            <button class="keypad-btn clear-btn" id="clearBtn">⌫</button>
+            <button class="keypad-btn" data-digit="0">0</button>
+            <button id="submitBtn" class="keypad-btn submit-btn">✓</button>
         </div>
 
         {% if oidc_enabled %}
         <div class="sso-row">
             <a href="/login" id="ssoLoginBtn">Login with SSO</a>
-            <button id="ssoOpenBtn" onclick="openDoorWithSSO()">Open with SSO</button>
+            <button id="ssoOpenBtn">Open with SSO</button>
         </div>
         {% endif %}
 
         <!-- Logout button for OIDC -->
-        <button onclick="window.location.href='/oidc/logout'" id="ssoLogoutBtn">Logout</button>
+        <button id="ssoLogoutBtn">Logout</button>
 
     </div>
     <div id="toast-container"></div>
@@ -1701,6 +1701,19 @@
 
             // Initialize PIN display
             updatePinDisplay();
+
+            // Wire up keypad buttons
+            document.querySelectorAll('.keypad-btn[data-digit]').forEach(btn => {
+                btn.addEventListener('click', () => addDigit(btn.dataset.digit));
+            });
+            const clearBtn = document.getElementById('clearBtn');
+            if (clearBtn) clearBtn.addEventListener('click', clearPin);
+            const submitBtn2 = document.getElementById('submitBtn');
+            if (submitBtn2) submitBtn2.addEventListener('click', () => { if (!isSubmitting) openDoor(); });
+            const ssoOpenBtn = document.getElementById('ssoOpenBtn');
+            if (ssoOpenBtn) ssoOpenBtn.addEventListener('click', openDoorWithSSO);
+            const ssoLogoutBtn = document.getElementById('ssoLogoutBtn');
+            if (ssoLogoutBtn) ssoLogoutBtn.addEventListener('click', () => { window.location.href = '/oidc/logout'; });
 
             // Add keyboard support; ignore auto-repeat when key is held down
             document.addEventListener('keydown', function (event) {
