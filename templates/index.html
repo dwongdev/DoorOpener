@@ -575,6 +575,29 @@
 
         .access-popup.denied::before { content: ''; }
 
+        .access-popup.denied::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 3px,
+                rgba(0, 0, 0, 0.1) 3px,
+                rgba(0, 0, 0, 0.1) 4px
+            );
+            pointer-events: none;
+        }
+
+        .access-popup.denied .scan-line {
+            position: absolute;
+            left: 0; right: 0;
+            height: 30%;
+            background: linear-gradient(180deg, transparent, rgba(255,59,59,0.08), transparent);
+            animation: scan-sweep 0.6s ease-out forwards;
+            pointer-events: none;
+        }
+
         .access-popup.granted {
             font-family: 'Courier New', Courier, monospace;
             font-size: 1rem;
@@ -1662,28 +1685,29 @@
             } else if (id === 'accessDeniedPopup') {
                 const line1 = '✕ ACCESS_DENIED';
                 const line2 = errorMsg ? '> ' + errorMsg.toUpperCase() : null;
+                const sl = '<span class="scan-line"></span>';
                 let i = 0;
-                popup.innerHTML = '_';
+                popup.innerHTML = sl + '_';
                 popup._typeInterval = setInterval(() => {
                     i++;
-                    popup.innerHTML = line1.slice(0, i) + '_';
+                    popup.innerHTML = sl + line1.slice(0, i) + '_';
                     if (i >= line1.length) {
                         clearInterval(popup._typeInterval);
                         if (line2) {
                             setTimeout(() => {
                                 let j = 0;
-                                popup.innerHTML = line1 + '<br>_';
+                                popup.innerHTML = sl + line1 + '<br>_';
                                 popup._typeInterval = setInterval(() => {
                                     j++;
-                                    popup.innerHTML = line1 + '<br>' + line2.slice(0, j) + '_';
+                                    popup.innerHTML = sl + line1 + '<br>' + line2.slice(0, j) + '_';
                                     if (j >= line2.length) {
                                         clearInterval(popup._typeInterval);
-                                        popup.innerHTML = line1 + '<br>' + line2;
+                                        popup.innerHTML = sl + line1 + '<br>' + line2;
                                     }
                                 }, 35);
                             }, 120);
                         } else {
-                            popup.innerHTML = line1;
+                            popup.innerHTML = sl + line1;
                         }
                     }
                 }, 40);
