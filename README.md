@@ -26,15 +26,16 @@ A web-based keypad for controlling smart door locks via Home Assistant. PIN-prot
 
 - Visual 3×4 keypad with auto-submit on valid PIN length
 - Per-user PINs (4–8 digits), stored in a JSON user store
-- Admin dashboard — user management, audit logs, leaderboard, live stats
+- Admin dashboard — user management, audit logs, leaderboard, 24-hour activity chart
 - OIDC/SSO login (Authentik) with optional pinless door open
+- Terminal-style "ACCESS GRANTED" animation on successful open
 - Audio feedback (success chimes, failure sounds) and haptic on mobile
 - Real-time battery monitoring for Zigbee devices (polls every 60 s)
 - Multi-layer rate limiting: per-IP, per-session, and global
 - Brute-force lockout with visual countdown on the keypad
-- Security headers (CSP, XSS protection, clickjacking prevention)
+- Security headers: CSP with per-request nonces, HSTS-ready, clickjacking prevention
 - PWA — installable, works offline via service worker
-- Dark mode (auto, follows OS preference)
+- Optional page title (e.g. building name) displayed above the keypad
 - Supports `switch`, `lock`, and `input_boolean` HA entities
 - Test mode for safe development without triggering the actual door
 
@@ -119,7 +120,8 @@ admin_password = change-me
 [server]
 port = 6532
 test_mode = false
-67mode = false   # enable 6-7 easter egg
+# page_title = Sunset Apartments   # displayed above keypad; omit to hide
+67mode = false                      # enable 6-7 easter egg
 
 [security]
 max_attempts = 5               # failed attempts per IP before block
@@ -155,8 +157,7 @@ DoorOpener stores users in `users.json`. Manage them through the admin dashboard
 - Activate / deactivate without deletion
 - View creation date, last used, and open count
 - Clear logs (test data or all)
-
-
+- 24-hour activity bar chart
 
 ---
 
@@ -195,7 +196,7 @@ When OIDC is enabled, a **Login with SSO** button appears on the keypad. Authent
 | `GET` | `/` | Keypad UI |
 | `POST` | `/open-door` | Open the door (JSON body: `{"pin": "1234"}`) |
 | `GET` | `/battery` | Battery level for configured Zigbee device |
-| `GET` | `/auth-status` | Current OIDC auth state |
+| `GET` | `/auth/status` | Current OIDC auth state |
 | `GET` | `/health` | Health check — returns `{"status": "ok"}` |
 | `GET` | `/admin` | Admin dashboard UI |
 | `POST` | `/admin/auth` | Admin login |
