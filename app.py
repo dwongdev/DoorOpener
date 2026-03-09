@@ -308,7 +308,10 @@ def add_security_headers(response):
     # Modern browser policies
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = (
-        "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), fullscreen=(self)"
+        "geolocation=(), microphone=(), camera=(), payment=(), usb=(), "
+        "magnetometer=(), gyroscope=(), fullscreen=(self), "
+        "browsing-topics=(), run-ad-auction=(), join-ad-interest-group=(), "
+        "private-aggregation=(), attribution-reporting=(), compute-pressure=()"
     )
     response.headers["X-Permitted-Cross-Domain-Policies"] = "none"
     response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
