@@ -245,11 +245,12 @@
         #toast-container {
             position: fixed;
             z-index: 9999;
-            right: 2vw;
-            bottom: 2vh;
+            top: 2vh;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
+            align-items: center;
             gap: 0.5rem;
             max-width: 90vw;
             pointer-events: none;
@@ -261,8 +262,8 @@
 
         .toast {
             min-width: 200px;
-            max-width: 340px;
-            background: rgba(16, 16, 22, 0.82);
+            max-width: 360px;
+            background: rgba(16, 16, 22, 0.88);
             backdrop-filter: blur(18px);
             -webkit-backdrop-filter: blur(18px);
             color: #f0f0f0;
@@ -272,8 +273,8 @@
             border-left: 3px solid rgba(255, 255, 255, 0.18);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.36), 0 1px 4px rgba(0, 0, 0, 0.2);
             opacity: 0;
-            transform: translateX(48px);
-            transition: opacity 0.32s cubic-bezier(.4, 0, .2, 1), transform 0.32s cubic-bezier(.4, 0, .2, 1);
+            transform: translateY(-16px);
+            transition: opacity 0.28s cubic-bezier(.4, 0, .2, 1), transform 0.28s cubic-bezier(.4, 0, .2, 1);
             font-size: 0.95rem;
             line-height: 1.45;
             pointer-events: auto;
@@ -295,20 +296,6 @@
             color: #00e676;
         }
 
-        .toast.success.welcome {
-            min-width: 280px;
-            padding: 1.1rem 1.4rem 1.2rem;
-        }
-
-        .toast.success.welcome .toast-welcome {
-            display: block;
-            font-size: 1.35rem;
-            font-weight: 700;
-            color: #00e676;
-            letter-spacing: 0.01em;
-            text-shadow: 0 0 18px rgba(0, 230, 118, 0.55), 0 0 4px rgba(0, 230, 118, 0.3);
-            line-height: 1.2;
-        }
 
         .toast.error {
             border-left-color: #ff3b3b;
@@ -336,15 +323,16 @@
 
         .toast.show {
             opacity: 1;
-            transform: translateX(0);
+            transform: translateY(0);
         }
 
         @media (max-width: 600px) {
             #toast-container {
-                right: 2vw;
-                bottom: 8vh;
+                top: 1.5vh;
+                left: 50%;
+                transform: translateX(-50%);
                 max-width: 96vw;
-                align-items: stretch;
+                align-items: center;
             }
 
             .toast {
@@ -1281,7 +1269,8 @@
                 .then(response => response.json().then(data => ({ status: response.status, data })))
                 .then(({ status, data }) => {
                     if (status === 200 && data.status === 'success') {
-                        showStatus('Success: ' + data.message, 'success');
+                        const nameMatch = data.message && data.message.match(/Welcome home,?\s+([^!]+)!/);
+                        const userName = nameMatch ? nameMatch[1].trim() : null;
 
                         // Play success sound and fancy vibration
                         playSuccessSound();
@@ -1289,7 +1278,7 @@
                             // Fancy "ta-da" vibration pattern: short-long-short with crescendo
                             window.navigator.vibrate([50, 30, 150, 50, 80, 30, 200]);
                         }
-                        showAccessPopup('accessGrantedPopup');
+                        showAccessPopup('accessGrantedPopup', userName);
                         flashContainer('grant');
                     } else {
                         if ((status === 429 || status === 401) && data && data.blocked_until) {
@@ -1352,9 +1341,10 @@
                 .then(response => response.json().then(data => ({ status: response.status, data })))
                 .then(({ status, data }) => {
                     if (status === 200 && data.status === 'success') {
-                        showStatus('Success: ' + data.message, 'success');
+                        const nameMatch = data.message && data.message.match(/Welcome home,?\s+([^!]+)!/);
+                        const userName = nameMatch ? nameMatch[1].trim() : null;
                         playSuccessSound();
-                        showAccessPopup('accessGrantedPopup');
+                        showAccessPopup('accessGrantedPopup', userName);
                         flashContainer('grant');
                         if (window.navigator.vibrate) window.navigator.vibrate([50, 30, 150, 50, 80, 30, 200]);
                     } else {
@@ -1393,15 +1383,7 @@
             const toastContainer = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = 'toast ' + type;
-
-            // Special rendering for "Welcome home" success messages
-            const welcomeMatch = type === 'success' && message.match(/Welcome home[^!]*!/);
-            if (welcomeMatch) {
-                toast.classList.add('welcome');
-                toast.innerHTML = `<span class="toast-welcome">${escapeHtml(welcomeMatch[0])}</span>`;
-            } else {
-                toast.textContent = message;
-            }
+            toast.textContent = message;
 
             toastContainer.appendChild(toast);
             setTimeout(() => {
@@ -1618,7 +1600,7 @@
             setTimeout(() => c.classList.remove('flash-grant', 'flash-deny'), 1400);
         }
 
-        function showAccessPopup(id) {
+        function showAccessPopup(id, name) {
             const popup = document.getElementById(id);
             if (!popup) return;
             clearInterval(popup._typeInterval);
@@ -1628,24 +1610,46 @@
             setTimeout(() => popup.classList.add('visible'), 10);
 
             if (id === 'accessGrantedPopup') {
-                const full = '> ACCESS_GRANTED';
+                const line1 = '> ACCESS_GRANTED';
+                const line2 = name ? '> WELCOME, ' + name.toUpperCase() : null;
                 let i = 0;
                 popup.innerHTML = '<span class="scan-line"></span>_';
+
                 popup._typeInterval = setInterval(() => {
                     i++;
-                    popup.innerHTML = '<span class="scan-line"></span>' + full.slice(0, i) + '_';
-                    if (i >= full.length) {
+                    popup.innerHTML = '<span class="scan-line"></span>' + line1.slice(0, i) + '_';
+                    if (i >= line1.length) {
                         clearInterval(popup._typeInterval);
-                        let on = true;
-                        popup._blinkInterval = setInterval(() => {
-                            on = !on;
-                            popup.innerHTML = '<span class="scan-line"></span>' + full + (on ? '_' : ' ');
-                        }, 420);
+                        if (line2) {
+                            // brief pause then type second line
+                            setTimeout(() => {
+                                let j = 0;
+                                popup.innerHTML = '<span class="scan-line"></span>' + line1 + '<br>' + '_';
+                                popup._typeInterval = setInterval(() => {
+                                    j++;
+                                    popup.innerHTML = '<span class="scan-line"></span>' + line1 + '<br>' + line2.slice(0, j) + '_';
+                                    if (j >= line2.length) {
+                                        clearInterval(popup._typeInterval);
+                                        let on = true;
+                                        popup._blinkInterval = setInterval(() => {
+                                            on = !on;
+                                            popup.innerHTML = '<span class="scan-line"></span>' + line1 + '<br>' + line2 + (on ? '_' : ' ');
+                                        }, 420);
+                                    }
+                                }, 42);
+                            }, 160);
+                        } else {
+                            let on = true;
+                            popup._blinkInterval = setInterval(() => {
+                                on = !on;
+                                popup.innerHTML = '<span class="scan-line"></span>' + line1 + (on ? '_' : ' ');
+                            }, 420);
+                        }
                     }
                 }, 48);
             }
 
-            const hideDelay = id === 'accessGrantedPopup' ? 2100 : 1700;
+            const hideDelay = id === 'accessGrantedPopup' ? 2800 : 1700;
             setTimeout(() => {
                 clearInterval(popup._typeInterval);
                 clearInterval(popup._blinkInterval);
