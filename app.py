@@ -136,8 +136,8 @@ if not _env_secret:
                 "FLASK_SECRET_KEY not set and no [server] secret_key in config.ini; "
                 "sessions may become invalid across restarts or multiple workers."
             )
-    except Exception:  # nosec B110 - logging warning is best-effort; failure is non-critical
-        pass
+    except Exception as e:  # nosec B110 - logging warning is best-effort; failure is non-critical
+        logging.getLogger("dooropener").warning(f"Could not read secret_key from config.ini: {e}")
 
 # Per-user PINs from [pins] section (baseline, read-only)
 user_pins = dict(config.items("pins")) if config.has_section("pins") else {}
