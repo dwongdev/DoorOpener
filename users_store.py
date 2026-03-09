@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import tempfile
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
@@ -52,11 +53,23 @@ class UsersStore:
     def _save_atomic(self) -> None:
         dir_path = os.path.dirname(self.path)
         os.makedirs(dir_path, exist_ok=True)
-        fd, tmp_path = tempfile.mkstemp(dir=dir_path, suffix=".tmp")
+        # Prefer writing the temp file next to the target (same filesystem = atomic
+        # rename). Fall back to /tmp when the app directory is read-only, e.g. when
+        # users.json is a Docker bind-mount on an otherwise immutable image layer.
+        for tmp_dir in (dir_path, tempfile.gettempdir()):
+            try:
+                fd, tmp_path = tempfile.mkstemp(dir=tmp_dir, suffix=".tmp")
+                break
+            except PermissionError:
+                continue
+        else:
+            raise PermissionError(
+                f"Cannot create temp file in {dir_path} or {tempfile.gettempdir()}"
+            )
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as f:
                 json.dump(self.data, f, ensure_ascii=False, indent=2)
-            os.replace(tmp_path, self.path)
+            shutil.move(tmp_path, self.path)
         except Exception:
             try:
                 os.remove(tmp_path)
