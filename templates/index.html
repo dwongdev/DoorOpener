@@ -13,7 +13,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="DoorOpener">
-    <style>
+    <style nonce="{{ csp_nonce }}">
         body {
             font-family: 'Arial', sans-serif;
             display: flex;
@@ -1045,7 +1045,7 @@
         <span class="gear-label">admin panel</span>
     </a>
 
-    <script>
+    <script nonce="{{ csp_nonce }}">
         let batteryLevel = null;
         let currentPin = '';
         let isSubmitting = false;

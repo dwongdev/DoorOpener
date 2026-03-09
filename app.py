@@ -393,6 +393,7 @@ def index():
         require_pin_for_oidc=require_pin_for_oidc,
         easter_egg_enabled=easter_egg_enabled,
         app_version=APP_VERSION,
+        csp_nonce=g.csp_nonce,
     )
 
 
@@ -997,7 +998,7 @@ def open_door():
 
 @app.route("/admin")
 def admin():
-    return render_template("admin.html", oidc_enabled=bool(oauth), app_version=APP_VERSION)
+    return render_template("admin.html", oidc_enabled=bool(oauth), app_version=APP_VERSION, csp_nonce=g.csp_nonce)
 
 
 # --- OIDC (Authentik) Routes ---
