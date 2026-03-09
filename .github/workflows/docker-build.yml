@@ -21,6 +21,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      actions: write
 
     steps:
       - name: Checkout repository
@@ -46,6 +47,8 @@ jobs:
         with:
           push: true
           tags: ghcr.io/${{ steps.reponame.outputs.repository }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Build and push Docker image (release)
         if: github.event_name == 'release'
@@ -53,3 +56,5 @@ jobs:
         with:
           push: true
           tags: ghcr.io/${{ steps.reponame.outputs.repository }}:${{ github.event.release.tag_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
