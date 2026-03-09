@@ -700,6 +700,11 @@
         await Promise.all([loadLogs(), loadUsers()]);
     }
 
+    function showLogin() {
+        document.getElementById('loginForm').style.display = 'block';
+        document.getElementById('dashboard').style.display = 'none';
+    }
+
     async function checkAuthentication() {
         try {
             const res = await fetch('/admin/check-auth', { credentials: 'same-origin', cache: 'no-store' });
@@ -708,10 +713,10 @@
                 if (data.csrf_token) csrfToken = data.csrf_token;
                 await showDashboard();
             } else {
-                document.getElementById('loginForm').style.display = 'block';
+                showLogin();
             }
         } catch (e) {
-            document.getElementById('loginForm').style.display = 'block';
+            showLogin();
         }
     }
 
@@ -723,8 +728,7 @@
             cache: 'no-store'
         }).finally(() => {
             isAuthenticated = false;
-            document.getElementById('loginForm').style.display = 'block';
-            document.getElementById('dashboard').style.display = 'none';
+            showLogin();
             document.getElementById('adminPassword').value = '';
             document.getElementById('rememberMe').checked = false;
         });
