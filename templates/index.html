@@ -300,14 +300,6 @@
             padding: 1.1rem 1.4rem 1.2rem;
         }
 
-        .toast.success.welcome .toast-sub {
-            display: block;
-            font-size: 0.8rem;
-            opacity: 0.6;
-            margin-bottom: 0.35rem;
-            letter-spacing: 0.02em;
-        }
-
         .toast.success.welcome .toast-welcome {
             display: block;
             font-size: 1.35rem;
@@ -443,13 +435,24 @@
 
         .keypad-btn.submit-btn.submitting {
             cursor: wait;
-            animation: submit-pulse 0.55s ease-in-out infinite alternate;
             pointer-events: none;
+            opacity: 0.85;
         }
 
-        @keyframes submit-pulse {
-            from { opacity: 0.55; transform: scale(0.96); }
-            to   { opacity: 1;   transform: scale(1.04); }
+        .keypad-btn.submit-btn.submitting::after {
+            content: '';
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2.5px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: btn-spin 0.7s linear infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes btn-spin {
+            to { transform: rotate(360deg); }
         }
 
         /* Gear icon spin and label */
@@ -555,12 +558,11 @@
             background: rgba(0, 0, 0, 0.52);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            font-family: 'Courier New', monospace;
-            font-size: 1.65rem;
+            font-size: 1.5rem;
             font-weight: 700;
-            padding: 16px 34px;
+            padding: 14px 30px;
             border-radius: 16px;
-            letter-spacing: 4px;
+            letter-spacing: 0.04em;
             pointer-events: none;
             opacity: 0;
             white-space: nowrap;
@@ -574,7 +576,6 @@
 
         .access-popup.denied {
             color: #ff3b3b;
-            border: 1.5px solid rgba(255, 59, 59, 0.55);
             box-shadow: 0 0 28px rgba(255, 59, 59, 0.4), 0 0 64px rgba(255, 59, 59, 0.15), inset 0 0 24px rgba(255, 59, 59, 0.07);
             text-shadow: 0 0 14px rgba(255, 59, 59, 0.95), 0 0 36px rgba(255, 59, 59, 0.45);
         }
@@ -585,13 +586,26 @@
 
         .access-popup.granted {
             color: #00e676;
-            border: 1.5px solid rgba(0, 230, 118, 0.55);
             box-shadow: 0 0 28px rgba(0, 230, 118, 0.4), 0 0 64px rgba(0, 230, 118, 0.15), inset 0 0 24px rgba(0, 230, 118, 0.07);
             text-shadow: 0 0 14px rgba(0, 230, 118, 0.95), 0 0 36px rgba(0, 230, 118, 0.45);
         }
 
         .access-popup.granted::before {
             content: '✓  ';
+        }
+
+        /* Submission loading overlay */
+        #submit-overlay {
+            display: none;
+            position: absolute;
+            inset: 0;
+            border-radius: 24px;
+            background: rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            z-index: 5;
+            pointer-events: all;
+            transition: opacity 0.18s ease;
         }
 
         /* Easter egg overlay */
@@ -926,10 +940,11 @@
 
 <body>
     <div class="container">
-        <!-- Matrix-style ACCESS DENIED popup -->
-        <div id="accessDeniedPopup" class="access-popup denied">ACCESS DENIED</div>
-        <!-- Matrix-style ACCESS GRANTED popup -->
-        <div id="accessGrantedPopup" class="access-popup granted">ACCESS GRANTED</div>
+        <!-- Submission loading overlay -->
+        <div id="submit-overlay"></div>
+        <!-- Access popups -->
+        <div id="accessDeniedPopup" class="access-popup denied">Access Denied</div>
+        <div id="accessGrantedPopup" class="access-popup granted">Access Granted</div>
         <!-- PIN Display -->
         <div id="pinDisplay">
             <span class="pin-placeholder">Enter PIN</span>
@@ -992,6 +1007,24 @@
         let isSubmitting = false;
         let autoSubmitTimer = null;
         let blockCountdownTimer = null;
+        let sendingDotsInterval = null;
+
+        function startSendingDots(display) {
+            let count = 0;
+            display.innerHTML = '<span class="pin-placeholder" id="sendingText">Sending</span>';
+            sendingDotsInterval = setInterval(() => {
+                count = (count + 1) % 4;
+                const el = document.getElementById('sendingText');
+                if (el) el.textContent = 'Sending' + '.'.repeat(count);
+            }, 350);
+        }
+
+        function stopSendingDots() {
+            if (sendingDotsInterval) {
+                clearInterval(sendingDotsInterval);
+                sendingDotsInterval = null;
+            }
+        }
 
         function addDigit(digit) {
             if (isSubmitting) return;
@@ -1174,9 +1207,10 @@
             // Visual submitting state
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.classList.add('submitting');
-            submitBtn.textContent = '⟳';
+            submitBtn.textContent = '';
             const display = document.getElementById('pinDisplay');
-            display.innerHTML = '<span class="pin-placeholder">Sending…</span>';
+            startSendingDots(display);
+            document.getElementById('submit-overlay').style.display = 'block';
 
             // Send request to open door
             fetch('/open-door', {
@@ -1225,6 +1259,8 @@
                     showStatus('Error: Could not connect to server', 'error');
                 })
                 .finally(() => {
+                    stopSendingDots();
+                    document.getElementById('submit-overlay').style.display = 'none';
                     // Reset button and clear PIN after attempt
                     setTimeout(() => {
                         submitBtn.classList.remove('submitting');
@@ -1244,6 +1280,9 @@
             isSubmitting = true;
             setKeypadDisabled(true);
             if (autoSubmitTimer) { clearTimeout(autoSubmitTimer); autoSubmitTimer = null; }
+            const ssoDisplay = document.getElementById('pinDisplay');
+            startSendingDots(ssoDisplay);
+            document.getElementById('submit-overlay').style.display = 'block';
             // No PIN payload; rely on server-side OIDC session
             fetch('/open-door', {
                 method: 'POST',
@@ -1274,6 +1313,8 @@
                 })
                 .catch(() => showStatus('Error: Could not connect to server', 'error'))
                 .finally(() => {
+                    stopSendingDots();
+                    document.getElementById('submit-overlay').style.display = 'none';
                     setTimeout(() => {
                         const submitBtn = document.getElementById('submitBtn');
                         submitBtn.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
@@ -1297,12 +1338,7 @@
             const welcomeMatch = type === 'success' && message.match(/Welcome home[^!]*!/);
             if (welcomeMatch) {
                 toast.classList.add('welcome');
-                const parts = message.replace(/^Success:\s*/, '').split('\n');
-                const subText = parts[0] || '';
-                const welcomeText = parts[1] || welcomeMatch[0];
-                toast.innerHTML =
-                    `<span class="toast-sub">${escapeHtml(subText)}</span>` +
-                    `<span class="toast-welcome">${escapeHtml(welcomeText)}</span>`;
+                toast.innerHTML = `<span class="toast-welcome">${escapeHtml(welcomeMatch[0])}</span>`;
             } else {
                 toast.textContent = message;
             }
