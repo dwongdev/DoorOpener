@@ -24,6 +24,7 @@ import requests
 from flask import (
     Flask,
     abort,
+    g,
     jsonify,
     redirect,
     render_template,
@@ -316,12 +317,11 @@ def add_security_headers(response):
     response.headers["X-Permitted-Cross-Domain-Policies"] = "none"
     response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
 
-    # Strict CSP for simple app: allow only same-origin resources, inline styles/scripts as used by templates,
-    # and local API calls. Disallow base-uri/object/embed; prevent framing.
+    nonce = getattr(g, "csp_nonce", "")
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline'; "
-        "style-src 'self' 'unsafe-inline'; "
+        f"script-src 'self' 'nonce-{nonce}'; "
+        f"style-src 'self' 'nonce-{nonce}'; "
         "img-src 'self' data:; "
         "font-src 'self'; "
         "connect-src 'self' https://api.github.com; "
@@ -372,6 +372,11 @@ def validate_pin_input(pin):
     except Exception as e:
         logger.error(f"Error validating PIN input: {e}")
         return False, None
+
+
+@app.before_request
+def set_csp_nonce():
+    g.csp_nonce = secrets.token_hex(16)
 
 
 @app.after_request
