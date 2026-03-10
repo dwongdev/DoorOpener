@@ -758,6 +758,23 @@
             to   { transform: scale(1)   translateY(0);    opacity: 1; }
         }
 
+        @keyframes page-bounce {
+            0%   { transform: translateY(0)     rotate(0deg);    }
+            12%  { transform: translateY(-38px) rotate(-2deg);   }
+            24%  { transform: translateY(0)     rotate(2deg);    }
+            36%  { transform: translateY(-22px) rotate(-1.2deg); }
+            48%  { transform: translateY(0)     rotate(1deg);    }
+            60%  { transform: translateY(-10px) rotate(-0.5deg); }
+            72%  { transform: translateY(0)     rotate(0.3deg);  }
+            84%  { transform: translateY(-4px)  rotate(0deg);    }
+            100% { transform: translateY(0)     rotate(0deg);    }
+        }
+
+        body.wobbling {
+            animation: page-bounce 1.8s cubic-bezier(.4, 0, .2, 1) both;
+            transform-origin: center bottom;
+        }
+
         @keyframes egg-up {
             0%, 100% { transform: translateY(0); }
             50%      { transform: translateY(-30px); }
@@ -1207,6 +1224,9 @@
             launchConfetti(document.getElementById('confetti-canvas'));
             playEasterEggSound();
 
+            document.body.classList.add('wobbling');
+            setTimeout(() => document.body.classList.remove('wobbling'), 1850);
+
             if (window.navigator.vibrate) {
                 // Pulse in sync with each seesaw bounce (0.45s period, 10 cycles)
                 let pulses = 0;
@@ -1240,7 +1260,9 @@
             let frame = 0;
             function draw() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let anyVisible = false;
                 particles.forEach(p => {
+                    if (p.y < canvas.height + 20) anyVisible = true;
                     ctx.save();
                     ctx.translate(p.x, p.y);
                     ctx.rotate(p.tilt);
@@ -1252,7 +1274,7 @@
                     p.tilt += p.tiltSpeed;
                 });
                 frame++;
-                if (frame < 220) requestAnimationFrame(draw);
+                if (anyVisible) requestAnimationFrame(draw);
             }
             draw();
         }
