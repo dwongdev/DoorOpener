@@ -759,19 +759,22 @@
         }
 
         @keyframes page-bounce {
-            0%   { transform: translateY(0)     rotate(0deg);    }
-            12%  { transform: translateY(-38px) rotate(-2deg);   }
-            24%  { transform: translateY(0)     rotate(2deg);    }
-            36%  { transform: translateY(-22px) rotate(-1.2deg); }
-            48%  { transform: translateY(0)     rotate(1deg);    }
-            60%  { transform: translateY(-10px) rotate(-0.5deg); }
-            72%  { transform: translateY(0)     rotate(0.3deg);  }
-            84%  { transform: translateY(-4px)  rotate(0deg);    }
-            100% { transform: translateY(0)     rotate(0deg);    }
+            0%   { transform: translateY(0)      rotate(0deg);    }
+            8%   { transform: translateY(-80px)  rotate(-5deg);   }
+            16%  { transform: translateY(15px)   rotate(5deg);    }
+            24%  { transform: translateY(-60px)  rotate(-4deg);   }
+            32%  { transform: translateY(10px)   rotate(3.5deg);  }
+            40%  { transform: translateY(-35px)  rotate(-2.5deg); }
+            50%  { transform: translateY(7px)    rotate(2deg);    }
+            60%  { transform: translateY(-16px)  rotate(-1.2deg); }
+            70%  { transform: translateY(4px)    rotate(0.7deg);  }
+            80%  { transform: translateY(-7px)   rotate(-0.3deg); }
+            90%  { transform: translateY(2px)    rotate(0deg);    }
+            100% { transform: translateY(0)      rotate(0deg);    }
         }
 
         body.wobbling {
-            animation: page-bounce 1.8s cubic-bezier(.4, 0, .2, 1) both;
+            animation: page-bounce 2.4s cubic-bezier(.4, 0, .2, 1) both;
             transform-origin: center bottom;
         }
 
